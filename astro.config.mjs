@@ -14,7 +14,7 @@ import markdoc from "@astrojs/markdoc";
 const AVATAR_DIR = "/images/authors";
 // https://astro.build/config
 export default defineConfig({
-  site: "/sankalpa-adhikari-sa.github.io/",
+  site: "https://github.com/sankalpa-adhikari-sa/sankalpa-adhikari-sa.github.io",
   redirects: {
     "en/all-docs": "/en/all-docs/1",
     "ne/all-docs": "/ne/all-docs/1",
