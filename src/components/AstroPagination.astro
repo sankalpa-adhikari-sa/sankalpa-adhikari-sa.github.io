@@ -1,0 +1,79 @@
+---
+import { Icon } from "@astrojs/starlight/components";
+
+interface Url {
+  current: string;
+  prev: string | undefined;
+  next: string | undefined;
+  first: string | undefined;
+  last: string | undefined;
+}
+
+const { url, dir } = Astro.props as { url: Url; dir: "rtl" | "ltr" };
+const isRtl = dir == "rtl";
+---
+
+{
+  (url.prev || url.next) && (
+    <div class="pagination-links print:hidden" dir={dir}>
+      {url.prev && (
+        <a href={url.prev} rel="prev">
+          <span class="link-label sl-flex">
+            <Icon name={isRtl ? "right-arrow" : "left-arrow"} size="1.25rem" />
+            {Astro.locals.t("page.previousLink")}
+          </span>
+        </a>
+      )}
+      {url.next && (
+        <a href={url.next} rel="next">
+          <span class="link-label sl-flex">
+            {Astro.locals.t("page.nextLink")}
+            <Icon name={isRtl ? "left-arrow" : "right-arrow"} size="1.25rem" />
+          </span>
+        </a>
+      )}
+    </div>
+  )
+}
+
+<style>
+  .pagination-links {
+    border-top: 1px solid var(--sl-color-gray-5);
+    display: flex;
+    padding-top: 1.5rem;
+  }
+
+  a {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    text-decoration: none;
+
+    &:is(:hover, :focus-visible) {
+      .link-label {
+        color: var(--sl-color-gray-2);
+      }
+
+      .link-title {
+        color: var(--sl-color-white);
+      }
+    }
+
+    &[rel="next"] {
+      align-items: flex-end;
+    }
+  }
+
+  .link-label {
+    align-items: center;
+    color: var(--sl-color-gray-3);
+    font-size: var(--sl-text-sm);
+    gap: 0.15rem;
+  }
+
+  .link-title {
+    color: var(--sl-color-gray-2);
+    font-weight: 600;
+    margin-inline: 0.25rem;
+  }
+</style>

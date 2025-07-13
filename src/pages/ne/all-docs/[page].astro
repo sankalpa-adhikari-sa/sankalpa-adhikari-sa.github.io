@@ -1,0 +1,129 @@
+---
+import { getCollection } from "astro:content";
+import { filterDocs } from "@/lib/filter-posts";
+import StarlightPage from "@astrojs/starlight/components/StarlightPage.astro";
+import type { CollectionEntry } from "astro:content";
+import type { PaginateFunction } from "astro";
+import { Badge } from "@astrojs/starlight/components";
+import AuthorsList from "@/components/AuthorsList.astro";
+import AstroPagination from "@/components/AstroPagination.astro";
+import { Card } from "@astrojs/starlight/components";
+import LocalIcon from "@/components/overrides/LocalIcon.astro";
+
+interface Page<T = any> {
+  data: T[];
+  start: number;
+  end: number;
+  total: number;
+  currentPage: number;
+  size: number;
+  lastPage: number;
+  url: {
+    current: string;
+    prev: string | undefined;
+    next: string | undefined;
+    first: string | undefined;
+    last: string | undefined;
+  };
+}
+
+export async function getStaticPaths({
+  paginate,
+}: {
+  paginate: PaginateFunction;
+  lang: string;
+}) {
+  const allDocs = await getCollection("docs");
+
+  const filteredDocs = filterDocs({
+    docs: allDocs,
+    lang: "ne",
+    sort_by: "date",
+  });
+
+  return paginate(filteredDocs, {
+    pageSize: 1,
+  });
+}
+
+const dir = "ltr";
+const lang = "ne";
+const { page } = Astro.props as { page: Page<CollectionEntry<"docs">> };
+---
+
+<StarlightPage
+  frontmatter={{
+    title: Astro.locals.t("page.allPosts"),
+    topic: "all_docs",
+    tableOfContents: false,
+  }}
+  dir={dir}
+  lang={lang}
+>
+  {
+    page.data.length === 0 ? (
+      <div>
+        <Card
+          title={Astro.locals.t("page.noPostsAvailabeTitle")}
+          icon="warning"
+        >
+          <div class="text-center py-8">
+            <p class="text-lg text-(--sl-color-gray-3) mb-2">
+              {Astro.locals.t("page.noPostsAvailabeBody1")}
+            </p>
+            <p class="text-sm text-(--sl-color-gray-4)">
+              {Astro.locals.t("page.noPostsAvailabeBody2")}
+            </p>
+          </div>
+        </Card>
+      </div>
+    ) : (
+      page.data.map((post) => (
+        <div class="clickable-card" data-href={`/${post.id}`}>
+          <Card title={post.data.title}>
+            {post.data.subtitle && (
+              <span class="text-sm mt-0 flex flex-wrap text-(--sl-color-gray-3) ">
+                {post.data.subtitle}
+              </span>
+            )}
+
+            {post.data.tags && post.data.tags.length > 0 && (
+              <div class="flex flex-row gap-2 mt-2">
+                {post.data.tags.map((tag) => (
+                  <Badge text={tag} />
+                ))}
+              </div>
+            )}
+
+            <div class="flex flex-row justify-between flex-wrap mt-1 ">
+              <div class="text-sm mt-2 flex flex-nowrap items-center justify-center gap-1 text-(--sl-color-gray-3) ">
+                <LocalIcon name="local:calendar" />
+                <time class="mt-0" datetime={post.data.created?.toISOString()}>
+                  {post.data.created?.toLocaleDateString(lang, {
+                    dateStyle: "medium",
+                    timeZone: "UTC",
+                  })}
+                </time>
+              </div>
+              {post.data.authors && post.data.authors.length > 0 && (
+                <AuthorsList authors={post.data.authors ?? []} />
+              )}
+            </div>
+          </Card>
+        </div>
+      ))
+    )
+  }
+
+  <AstroPagination url={page.url} dir={dir} />
+</StarlightPage>
+
+<script>
+  document.querySelectorAll(".clickable-card").forEach((card) => {
+    card.addEventListener("click", (e) => {
+      // @ts-ignore
+      const href = card.dataset.href;
+      if (href) window.location.href = href;
+    });
+  });
+</script>

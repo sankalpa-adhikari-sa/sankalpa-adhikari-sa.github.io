@@ -1,0 +1,9 @@
+{
+  "readingTime.text": "{{minutes}} min read",
+  "component.preview": "Preview",
+  "page.recentPosts": "Recent Posts",
+  "page.allPosts": "All Posts",
+  "page.noPostsAvailabeTitle": "No Posts Available",
+  "page.noPostsAvailabeBody1": "No posts found at the moment.",
+  "page.noPostsAvailabeBody2": "Check back later for new content!"
+}

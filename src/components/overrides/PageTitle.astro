@@ -1,0 +1,180 @@
+---
+import Default from "@astrojs/starlight/components/PageTitle.astro";
+import LocalIcon from "./LocalIcon.astro";
+import readingTime from "reading-time";
+import Image from "astro/components/Image.astro";
+import { Badge } from "@astrojs/starlight/components";
+import type { AuthorReference } from "../../plugins/config/authorsConfig";
+import AuthorsList from "../AuthorsList.astro";
+
+const { entry, lang, lastUpdated } = Astro.locals.starlightRoute;
+
+const createdDate = entry.data.created;
+const lastUpdatedDate = entry.data.lastUpdated || lastUpdated;
+
+const showReadingTime = entry.data.readingTime;
+const readingStats = readingTime(entry.body || "");
+const readingMinutes = new Intl.NumberFormat(lang).format(
+  Math.ceil(readingStats.minutes),
+);
+const readingTimeText = Astro.locals.t("readingTime.text", {
+  minutes: readingMinutes,
+  interpolation: { escapeValue: false },
+});
+const tags = entry.data.tags;
+const subtitle = entry.data.subtitle;
+const coverImage = entry.data.coverImage;
+const coverImageAlt = entry.data.coverImageAlt;
+const entryData = entry.data as typeof entry.data & {
+  authors?: AuthorReference[];
+};
+
+const hasAuthors =
+  entryData.authors &&
+  Array.isArray(entryData.authors) &&
+  entryData.authors.length > 0;
+---
+
+<Default><slot /></Default>
+
+{subtitle && <div class="page-subtitle">{subtitle}</div>}
+
+<div class="meta-wrapper">
+  {hasAuthors && <AuthorsList authors={entryData.authors ?? []} />}
+
+  {
+    (createdDate || lastUpdated || showReadingTime) && (
+      <div class="page-meta">
+        {createdDate && (
+          <div class="meta-item">
+            <LocalIcon name="local:calendar" />
+            <time datetime={createdDate.toISOString()}>
+              {createdDate.toLocaleDateString(lang, {
+                dateStyle: "medium",
+                timeZone: "UTC",
+              })}
+            </time>
+          </div>
+        )}
+
+        {lastUpdatedDate && (
+          <div class="meta-item">
+            <LocalIcon name="local:update" />
+            {
+              <time datetime={lastUpdatedDate.toISOString()}>
+                {lastUpdatedDate.toLocaleDateString(lang, {
+                  dateStyle: "medium",
+                  timeZone: "UTC",
+                })}
+              </time>
+            }
+          </div>
+        )}
+
+        {showReadingTime && readingTimeText && (
+          <div class="meta-item">
+            <span>{readingTimeText}</span>
+          </div>
+        )}
+      </div>
+    )
+  }
+</div>
+{
+  tags && tags.length > 0 && (
+    <div class="tag-wrapper">
+      {tags.map((tag) => (
+        <Badge class="border" variant="tip" text={tag} />
+      ))}
+    </div>
+  )
+}
+{
+  coverImage && (
+    <div class="cover-image sl-hidden md:sl-block">
+      <Image
+        src={coverImage}
+        loading="eager"
+        decoding="async"
+        alt={coverImageAlt || ""}
+      />
+    </div>
+  )
+}
+
+<style>
+  @layer starlight.core {
+    .meta-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      flex-direction: row;
+      justify-content: space-between;
+      margin-top: 0.25rem;
+    }
+
+    .cover-image {
+      margin-block-end: 1rem;
+      overflow: hidden;
+      object-fit: cover;
+      height: 15rem;
+    }
+    .cover-image img {
+      width: 100%;
+      height: auto;
+      object-fit: cover;
+      border-radius: var(--sl-radius-brand);
+    }
+    .meta-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .page-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 0.5rem;
+      font-size: var(--sl-text-sm);
+      color: var(--sl-color-gray-3);
+    }
+
+    .tag-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .page-subtitle {
+      margin-top: 0;
+      display: flex;
+      flex-wrap: wrap;
+      font-size: var(--sl-text-sm);
+      color: var(--sl-color-gray-3);
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .meta-label {
+      font-weight: 500;
+      color: var(--sl-color-gray-2);
+    }
+
+    time {
+      color: var(--sl-color-gray-3);
+    }
+
+    @media (max-width: 50rem) {
+      .meta-wrapper {
+        flex-direction: column-reverse;
+        gap: 0.5rem;
+      }
+    }
+  }
+</style>

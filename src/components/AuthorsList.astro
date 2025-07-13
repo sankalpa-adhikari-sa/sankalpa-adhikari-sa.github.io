@@ -1,0 +1,28 @@
+---
+import { resolveAuthors } from "../lib/authors";
+import AuthorHoverCard from "./AuthorHoverCard";
+const { authors } = Astro.props;
+
+const authorsConfig = {
+  authors: __STARLIGHT_AUTHORS__ || {},
+};
+const resolvedAuthors = resolveAuthors(authors, authorsConfig.authors);
+---
+
+<div class="author-list">
+  {
+    resolvedAuthors.map((author) => (
+      <AuthorHoverCard author={author} client:load />
+    ))
+  }
+</div>
+
+<style>
+  .author-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: var(--sl-text-sm);
+  }
+</style>

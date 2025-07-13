@@ -1,0 +1,40 @@
+---
+import { Icon } from 'astro-icon/components';
+
+type IconName = `local:${string}`;
+
+const {
+  name,
+  color = "var(--sl-icon-color)",
+  size = "1em",
+} = Astro.props as {
+  name: IconName;
+  color?: string;
+  size?: string;
+};
+
+// Trim the 'local:' prefix if it exists
+const trimmedName = name.startsWith('local:') ? name.replace('local:', '') : name;
+---
+
+<Icon
+  name={trimmedName}
+  color={color}
+  style={{
+    color,
+    fontSize: size,
+    width: size,
+    height: size,
+  }}
+/>
+
+<style>
+    [data-icon="logo"] {
+      svg {
+              color: var(--sl-icon-color);
+              font-size: var(--sl-icon-size, 1em);
+              width: 1em;
+              height: 1em;
+          }
+  }
+</style>
