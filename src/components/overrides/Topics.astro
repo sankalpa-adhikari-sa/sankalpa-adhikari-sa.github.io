@@ -1,19 +1,23 @@
 ---
-import { Badge, Icon } from '@astrojs/starlight/components'
-import LocalIcon from "./LocalIcon.astro"
+import { Badge, Icon } from "@astrojs/starlight/components";
+import LocalIcon from "./LocalIcon.astro";
 
-const { topics } = Astro.locals.starlightSidebarTopics
+const { topics } = Astro.locals.starlightSidebarTopics;
 ---
 
 <ul class="starlight-sidebar-topics">
   {
     topics.map((topic) => (
       <li>
-        <a href={topic.link} class:list={{ 'starlight-sidebar-topics-current': topic.isCurrent }}>
+        <a
+          href={topic.link}
+          class:list={{ "starlight-sidebar-topics-current": topic.isCurrent }}
+        >
           {topic.icon && (
             <div class="starlight-sidebar-topics-icon">
-              {topic.icon.startsWith('local:') ? (
-                // If it starts with 'local:', use CustomIcon
+              {topic.icon.startsWith("local:") ||
+              topic.icon.startsWith("mdi") ? (
+                // If it starts with 'local:', use CustomIcon or 'mdi:' to use material icons
                 <LocalIcon color={"var(--sl-icon-color)"} name={topic.icon} />
               ) : (
                 // Otherwise, use the default Icon component
@@ -24,7 +28,11 @@ const { topics } = Astro.locals.starlightSidebarTopics
           <div>
             {topic.label}
             {topic.badge && (
-              <Badge class="starlight-sidebar-topics-badge" text={topic.badge.text} variant={topic.badge.variant} />
+              <Badge
+                class="starlight-sidebar-topics-badge"
+                text={topic.badge.text}
+                variant={topic.badge.variant}
+              />
             )}
           </div>
         </a>
@@ -40,7 +48,7 @@ const { topics } = Astro.locals.starlightSidebarTopics
   }
 
   ul::after {
-    content: '';
+    content: "";
     display: block;
     margin-top: 1rem;
     height: 1px;
@@ -71,7 +79,7 @@ const { topics } = Astro.locals.starlightSidebarTopics
     color: var(--sl-color-accent-high);
   }
 
-  :global([data-theme='light']) a.starlight-sidebar-topics-current {
+  :global([data-theme="light"]) a.starlight-sidebar-topics-current {
     color: var(--sl-color-accent);
   }
 
@@ -85,7 +93,8 @@ const { topics } = Astro.locals.starlightSidebarTopics
     padding: 0.25rem;
   }
 
-  a:is(.starlight-sidebar-topics-current, :hover, :focus-visible) .starlight-sidebar-topics-icon {
+  a:is(.starlight-sidebar-topics-current, :hover, :focus-visible)
+    .starlight-sidebar-topics-icon {
     background-color: var(--sl-color-text-accent);
     border-color: var(--sl-color-text-accent);
     color: var(--sl-color-text-invert);

@@ -18,7 +18,9 @@ export default defineConfig({
   redirects: {
     "en/all-docs": "/en/all-docs/1",
     "ne/all-docs": "/ne/all-docs/1",
+    "/": "/en/",
   },
+
   integrations: [
     icon(),
     starlight({
@@ -26,7 +28,6 @@ export default defineConfig({
         en: "Sankalpa Adhikari",
         ne: "संकल्प अधिकारी",
       },
-      disable404Route: true,
       head: [
         {
           tag: "link",
@@ -39,7 +40,7 @@ export default defineConfig({
       ],
       editLink: {
         baseUrl:
-          "https://github.com/sankalpa-adhikari-sa/sankalpa-adhikari-sa.github.io",
+          "https://github.com/sankalpa-adhikari-sa/sankalpa-adhikari-sa.github.io/tree/main",
       },
       defaultLocale: "en",
       locales: {
@@ -63,6 +64,11 @@ export default defineConfig({
           icon: "github",
           label: "GitHub",
           href: "https://github.com/sankalpa-adhikari-sa",
+        },
+        {
+          icon: "linkedin",
+          label: "Linkedin",
+          href: "https://www.linkedin.com/in/sankalpa-adhikari-b78823238",
         },
       ],
 
@@ -96,8 +102,8 @@ export default defineConfig({
               ne: "सबै पोस्टहरू",
             },
             id: "all_docs",
-            link: "/all-docs/1",
-            icon: "local:home",
+            link: "/all-docs/",
+            icon: "mdi:home",
 
             items: [],
           },
@@ -124,7 +130,7 @@ export default defineConfig({
           {
             label: {
               en: "Projects",
-              ne: "संदर्भ",
+              ne: "परियोजना",
             },
             link: "/projects/",
             icon: "rocket",
@@ -134,7 +140,7 @@ export default defineConfig({
                 label: "Projects",
                 translations: {
                   en: "Projects",
-                  ne: "व्यंजनहरू",
+                  ne: "परियोजनाहरू",
                 },
                 autogenerate: { directory: "projects" },
               },
@@ -143,17 +149,17 @@ export default defineConfig({
           {
             label: {
               en: "Others",
-              ne: "संदर्भ",
+              ne: "अरू",
             },
             link: "/others/",
-            icon: "local:globe",
+            icon: "mdi:web",
             id: "others",
             items: [
               {
                 label: "Others",
                 translations: {
                   en: "Others",
-                  ne: "व्यंजनहरू",
+                  ne: "अरू",
                 },
                 autogenerate: { directory: "others" },
               },

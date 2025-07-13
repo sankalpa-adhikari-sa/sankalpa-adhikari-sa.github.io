@@ -1,0 +1,62 @@
+---
+title: "KoboBifrost Upload : Streamlining Data Entry for Kobotoolbox Projects"
+tags:
+  - kobotoolbox
+  - python
+  - projects
+  - XLSForm
+created: 2025-02-04T19:48:00
+readingTime: true
+authors:
+  - sankalpa
+---
+
+## Overview
+
+**KoboBifrost Upload** is a web application built using **Streamlit** that simplifies the process of updating survey data from an Excel file to a specified Kobotoolbox project. This tool was developed to address the inefficiencies and challenges faced during manual data entry, particularly when dealing with repetitive metadata and large datasets.
+
+## History and Motivation
+
+While working as a consultant agricultural engineer at the **CIMMYT** [**CSISA**](https://csisa.org/) project stationed in **Nepalgunj**, our primary platform for data collection and forms management was **Kobotoolbox**. Our routine reporting required us to collect and enter data from project beneficiaries into the Kobotoolbox platform.
+
+### The Problem
+
+- **Repetitive Metadata Entry**: Each data submission required filling out the same metadata fields (e.g., project name, duty station, beneficiary type) repeatedly.
+- **Slow Progress**: Due to the lengthy forms and repetitive nature of the metadata, our trainees could only enter about **50 data points per person**.
+- **Time Constraints**: Our team had other critical tasks, but the data entry process was consuming too much of our time.
+
+### The Turning Point
+
+I realized that entering data on a spreadsheet would be much faster, especially for repeated data, as we could simply drag and copy cells. This led me to explore the **Kobotoolbox API** for a more efficient solution.
+
+### The Solution
+
+As the only team member with Python skills at the time, I wrote a simple script to automate the data submission process. This script allowed us to enter data into an Excel file and then upload it to Kobotoolbox, significantly increasing our efficiency to **120+ submissions per person**.
+
+However, the script was not user-friendly for others on the team. To make it accessible, I converted the script into a **Streamlit application**, enabling the entire team to use it without needing to understand or modify the code.
+
+## Project Limitations
+
+While KoboBifrost Upload has been a valuable tool, it does have some limitations:
+
+- **No Support for Repeat Groups**: The application currently does not support repeat groups and nested groups in the data.
+- **No Media Support**: Media files are not supported in the current version.
+- **Other Limitations**: There are additional features and functionalities that could be added to enhance the tool further.
+
+Despite these limitations, KoboBifrost Upload has been a significant stepping stone in my journey into the world of **ODK (Open Data Kit)** solutions.
+
+## Try it Yourself
+
+You can find the project on GitHub here: 
+
+> [KoboBifrost Upload](https://github.com/sankalpa-adhikari-sa/kobo-bifrost-upload)
+> Feel free to contribute to the project and help make it even better!
+
+---
+
+KoboBifrost Upload not only improved our data entry process but also opened up new avenues for me to explore and developing ODK solutions.
+Feel free to checkout other amazing project like [[KoboBifrost CLI]] and [[KoboBifrost Visualizer]] .
+
+## Acknowledgments
+
+I am deeply grateful to my supervisor **Er. Subash Adhikari** for their unwavering support and encouragement in developing new tools and solutions to address our challenges. Their belief in fostering my skills played a crucial role in the creation of KoboBifrost Upload.

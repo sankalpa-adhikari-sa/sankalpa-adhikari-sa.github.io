@@ -1,0 +1,131 @@
+---
+title: "KoboBifrost CLI: Streamlining CRUD Operations for Kobotoolbox"
+tags:
+  - kobotoolbox
+  - projects
+  - XLSForm
+  - python
+created: 2025-02-04T19:48:00
+readingTime: true
+authors:
+  - sankalpa
+---
+
+import { LinkButton } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+import { Badge } from "@astrojs/starlight/components";
+
+## Introduction
+
+**KoboBifrost CLI** is a powerful command-line tool designed to perform CRUD (Create, Read, Update, Delete) operations efficiently and in a streamlined manner. If you've ever worked with Kobotoolbox and XLS forms, you know how repetitive and time-consuming some tasks can be. KoboBifrost CLI aims to simplify these processes, making your workflow faster and more efficient.
+
+## Why I Created KoboBifrost CLI
+
+Working with Kobotoolbox often involves repetitive tasks, especially when preparing and updating XLS forms. If you are from humanitarian organization, NGOs/INGOs or working on any research project that required working with the XLSForm and Kobotoolbox there is a chance you may feel the same thing. During my time at CIMMYT, we frequently worked with XLS form from creation and deployment to maintenance of XLSForms. After a while I felt the process was often slow and cumbersome. I started to look for any existing CLIs for kobotoolbox and unfortunately I didn't find any.
+Since I had been learning about the Kobotoolbox's api and experienced using it while developing [[KoboBifrost Upload]] I took it upon myself to develop it and implement on my workflow.
+
+### The Problem
+
+1. **Creating a New XLS Form locally:**
+   - You either start with a blank form, reuse an older project, or create a template.
+
+2. **Form development and Validation:**
+   - XLS forms can get messy specially working with thousand of rows in XLSForm, and there's always a chance of missing a group closure, accidental group components requiring conditional formatting.
+
+3. **Project Creation at Kobotoolbox server and Preview:**
+   - Navigate to the Kobotoolbox site, create a project on server, upload the XLS form, and preview it.
+   - If unsatisfied, edit the XLS form and repeat the process, a tedious and time-consuming task.
+
+4. **Deployment and Testing:**
+   - After testing, deploy the form and perform a test survey before final implementation.
+
+### The Inspiration
+
+If you've used Git's CLI, you know how convenient it is to create a project, make changes, and push those changes with just a few commands. I wanted a similar experience for Kobotoolbox. So, I started exploring how Git works and began building KoboBifrost CLI.
+
+## The Solution
+
+### Step 1 and 2: Creating Local XLS Form Project and Conditional formatting
+
+- **`bifrost init`**
+  - Creates a blank XLS form project.
+  - Optionally, you can enable conditional formatting at the start.
+
+### Step 3: Creation and Preview
+
+- **`bifrost create -ps`**
+  - Creates a project on the Kobotoolbox server and opens a preview form.
+
+### Step 3: Update and Preview
+
+- **`bifrost update -ps`**
+  - Updates the form and opens a preview of the current asset / form.
+
+### Step 4: Deploy
+
+- **`bifrost deploy`**
+  - Deploys the form.
+  - You can also redeploy using `-d` in the create command and `-d` and `-rd` in the update command.
+
+## Behind the Scenes
+
+KoboBifrost CLI creates a `.bifrost` folder when you initialize, create, update, deploy, or redeploy. This folder contains files updated with information like:
+
+- **Asset ID:** The ID of your XLS project.
+- **Filepath:** The location where the XLS form is stored on your local device.
+- **Download Path:** If you export data or assets.
+
+The API Key and API URL required for project authorization are handled by the keyring of your operating system.
+
+## Features
+
+KoboBifrost CLI allows you to perform the following actions:
+
+- **Create** new projects.
+- **Update** existing forms.
+- **Deploy** and **redeploy** forms.
+- **Preview** forms.
+- **Export** data.
+- **Copy permissions** from another project.
+- **Enable submission** without authorization feature.
+- **Delete** projects.
+- **Export assets** (<Badge text="XLSForm"/> or <Badge text="XForm"/> ).
+- **Export project data** in CSV and XLSX format.
+
+<Aside type="caution" title="Doesn't support version control">
+  Currently It's just a CLI and doesnot has version control feature for XLSx
+  files. If you know any opensource project for the version control of XLSx
+  files feel free to reach out, I would really love adding it in my workflow.
+</Aside>
+
+## Try It Yourself
+
+If you're interested in trying out KoboBifrost CLI, check out the GitHub repository:
+
+<Aside
+  type="note"
+  title="Kobobifrost cli GitHub">
+   Feelfree to contribute to the project and help make it even better!
+
+  <LinkButton
+    variant="secondary"
+    icon="external"
+    iconPlacement="start"
+    href="https://github.com/sankalpa-adhikari-sa/Kobo-bifrost-cli"
+  >
+   Related: Kobo bifrost cli
+  </LinkButton>
+</Aside>
+
+## Want a more detailed tutorial?
+
+You can reference [Getting started with KoboBifrost CLI](#want-a-more-detailed-tutorial) for more indepth guide and implementing it as a part of your workflow.
+
+---
+
+**KoboBifrost CLI** is here to make your Kobotoolbox experience smoother and more efficient. Give it a try and let me know what you think!
+Feel free to checkout other amazing project like [KoboBifrost Visualizer](../../projects/kobobifrost-visualizer) and [KoboBifrost Upload](../../projects/kobobifrost-upload) ..
+
+## Acknowledgments
+
+I am deeply grateful to my supervisor **Er. Subash Adhikari** and the entire CSISA Nepalgunj team for their unwavering support and encouragement in development of the CLI.

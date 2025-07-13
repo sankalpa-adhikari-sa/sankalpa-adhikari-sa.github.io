@@ -42,7 +42,7 @@ export async function getStaticPaths({
   });
 
   return paginate(filteredDocs, {
-    pageSize: 1,
+    pageSize: 10,
   });
 }
 
@@ -97,7 +97,8 @@ const { page } = Astro.props as { page: Page<CollectionEntry<"docs">> };
 
             <div class="flex flex-row justify-between flex-wrap mt-1 ">
               <div class="text-sm mt-2 flex flex-nowrap items-center justify-center gap-1 text-(--sl-color-gray-3) ">
-                <LocalIcon name="local:calendar" />
+                <LocalIcon name="mdi:calendar-month" />
+
                 <time class="mt-0" datetime={post.data.created?.toISOString()}>
                   {post.data.created?.toLocaleDateString(lang, {
                     dateStyle: "medium",

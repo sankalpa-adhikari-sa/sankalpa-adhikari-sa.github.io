@@ -12,7 +12,7 @@ export const collections = {
         return topicSchema.extend({
           created: z.date().optional(),
           subtitle: z.string().optional(),
-          lastUpdated: z.date().optional(),
+          lastUpdated: z.union([z.date(), z.boolean()]).optional(),
           readingTime: z.boolean().default(false),
           coverImage: image().optional(),
           coverImageAlt: z.string().optional(),

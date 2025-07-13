@@ -7,8 +7,6 @@ lastUpdated: 2022-08-09
 readingTime: true
 coverImage: ../../../../assets/ocean-hero.jpg
 tags: ["Kobotoolbox", "Github"]
-backlinks:
-  visible: true
 authors:
   - sankalpa
   - hideoo

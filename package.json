@@ -16,6 +16,7 @@
     "@astrojs/starlight-markdoc": "^0.4.0",
     "@astrojs/starlight-tailwind": "^4.0.1",
     "@astrojs/tailwind": "^6.0.2",
+    "@iconify-json/mdi": "^1.2.3",
     "@radix-ui/react-hover-card": "^1.1.14",
     "@tailwindcss/vite": "^4.0.7",
     "@types/react": "^19.1.8",

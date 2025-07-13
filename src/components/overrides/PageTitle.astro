@@ -47,7 +47,7 @@ const hasAuthors =
       <div class="page-meta">
         {createdDate && (
           <div class="meta-item">
-            <LocalIcon name="local:calendar" />
+            <LocalIcon name="mdi:calendar-month" />
             <time datetime={createdDate.toISOString()}>
               {createdDate.toLocaleDateString(lang, {
                 dateStyle: "medium",
@@ -59,7 +59,7 @@ const hasAuthors =
 
         {lastUpdatedDate && (
           <div class="meta-item">
-            <LocalIcon name="local:update" />
+            <LocalIcon name="mdi:autorenew" />
             {
               <time datetime={lastUpdatedDate.toISOString()}>
                 {lastUpdatedDate.toLocaleDateString(lang, {
