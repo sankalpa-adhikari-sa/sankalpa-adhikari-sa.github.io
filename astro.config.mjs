@@ -26,6 +26,7 @@ export default defineConfig({
         en: "Sankalpa Adhikari",
         ne: "संकल्प अधिकारी",
       },
+      disable404Route: true,
       head: [
         {
           tag: "link",

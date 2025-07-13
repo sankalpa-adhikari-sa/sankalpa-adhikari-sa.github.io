@@ -16,18 +16,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // Exclude internal Astro paths like /_image, /_astro, etc.
   const isInternalAstroPath = pathname.startsWith("/_");
 
-  const isGitHubPagesPath =
-    pathname.startsWith("/favicon.ico") ||
-    pathname.startsWith("/robots.txt") ||
-    pathname.startsWith("/sitemap");
-
-  if (
-    !isLocalized &&
-    !isStaticAsset &&
-    !isRoot &&
-    !isInternalAstroPath &&
-    !isGitHubPagesPath
-  ) {
+  if (!isLocalized && !isStaticAsset && !isRoot && !isInternalAstroPath) {
     return context.redirect(`/en${pathname}`, 302);
   }
 
