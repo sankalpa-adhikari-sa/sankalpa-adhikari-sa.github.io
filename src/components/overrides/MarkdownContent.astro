@@ -1,6 +1,8 @@
 ---
-import Default from '@astrojs/starlight/components/MarkdownContent.astro';
-
+import Comments from "@/components/Comments.astro";
+import Default from "@astrojs/starlight/components/MarkdownContent.astro";
+const { entry } = Astro.locals.starlightRoute;
 ---
 
 <Default><slot /></Default>
+{entry.data.template !== "splash" && <Comments />}

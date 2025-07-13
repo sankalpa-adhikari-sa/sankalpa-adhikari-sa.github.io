@@ -18,6 +18,7 @@ export const collections = {
           coverImageAlt: z.string().optional(),
           tags: z.array(z.string()).optional(),
           topic: z.string().optional(),
+          giscus: z.boolean().optional().default(false),
           // golb=false so that it will be skipped in creating recent docs or all docs
           glob: z.boolean().default(true),
           authors: z

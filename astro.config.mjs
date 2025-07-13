@@ -6,6 +6,7 @@ import icon from "astro-icon";
 import starlightThemeRapide from "starlight-theme-rapide";
 import starlightSidebarTopics from "starlight-sidebar-topics";
 import starlightAuthors from "./src/plugins/starlightAuthors";
+import starlightGiscus from "./src/plugins/starlightGiscus";
 
 import react from "@astrojs/react";
 
@@ -167,6 +168,17 @@ export default defineConfig({
           },
         ]),
         starlightThemeRapide(),
+        starlightGiscus({
+          repo: "sankalpa-adhikari-sa/sankalpa-adhikari-sa.github.io",
+          repoId: "R_kgDOPLnAbw",
+          category: "comments",
+          categoryId: "DIC_kwDOPLnAb84Cs5uT",
+          theme: {
+            light: "light_protanopia",
+            dark: "dark_protanopia",
+            auto: "preferred_color_scheme",
+          },
+        }),
       ],
     }),
     react(),
