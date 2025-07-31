@@ -103,7 +103,7 @@ export default defineConfig({
               ne: "सबै पोस्टहरू",
             },
             id: "all_docs",
-            link: "/all-docs/",
+            link: "/all-docs/1",
             icon: "mdi:home",
 
             items: [],

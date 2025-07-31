@@ -79,7 +79,7 @@ const { page } = Astro.props as { page: Page<CollectionEntry<"docs">> };
       </div>
     ) : (
       page.data.map((post) => (
-        <div class="clickable-card" data-href={`/${post.id}`}>
+        <div class="clickable-card cursor-pointer" data-href={`/${post.id}`}>
           <Card title={post.data.title}>
             {post.data.subtitle && (
               <span class="text-sm mt-0 flex flex-wrap text-(--sl-color-gray-3) ">

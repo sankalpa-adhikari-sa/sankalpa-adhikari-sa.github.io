@@ -5,6 +5,9 @@
   font-style: normal;
   font-display: swap;
 }
+@view-transition {
+  navigation: auto;
+}
 
 :root,
 ::backdrop {
@@ -36,7 +39,9 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 16rem;
   z-index: 50;
-  animation: fade-in 0.2s ease-out, zoom-in 0.2s ease-out;
+  animation:
+    fade-in 0.2s ease-out,
+    zoom-in 0.2s ease-out;
   transform-origin: var(--radix-hover-card-content-transform-origin, center);
   outline: none;
 }
