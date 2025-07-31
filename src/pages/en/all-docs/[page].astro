@@ -78,41 +78,46 @@ const { page } = Astro.props as { page: Page<CollectionEntry<"docs">> };
         </Card>
       </div>
     ) : (
-      page.data.map((post) => (
-        <div class="clickable-card cursor-pointer" data-href={`/${post.id}`}>
-          <Card title={post.data.title}>
-            {post.data.subtitle && (
-              <span class="text-sm mt-0 flex flex-wrap text-(--sl-color-gray-3) ">
-                {post.data.subtitle}
-              </span>
-            )}
-
-            {post.data.tags && post.data.tags.length > 0 && (
-              <div class="flex flex-row gap-2 mt-2">
-                {post.data.tags.map((tag) => (
-                  <Badge text={tag} />
-                ))}
-              </div>
-            )}
-
-            <div class="flex flex-row justify-between flex-wrap mt-1 ">
-              <div class="text-sm mt-2 flex flex-nowrap items-center justify-center gap-1 text-(--sl-color-gray-3) ">
-                <LocalIcon name="mdi:calendar-month" />
-
-                <time class="mt-0" datetime={post.data.created?.toISOString()}>
-                  {post.data.created?.toLocaleDateString(lang, {
-                    dateStyle: "medium",
-                    timeZone: "UTC",
-                  })}
-                </time>
-              </div>
-              {post.data.authors && post.data.authors.length > 0 && (
-                <AuthorsList authors={post.data.authors ?? []} />
+      page.data.map((post) => {
+        return (
+          <div class="clickable-card cursor-pointer" data-href={`/${post.id}`}>
+            <Card title={post.data.title}>
+              {post.data.subtitle && (
+                <span class="text-sm mt-0 flex flex-wrap text-(--sl-color-gray-3) ">
+                  {post.data.subtitle}
+                </span>
               )}
-            </div>
-          </Card>
-        </div>
-      ))
+
+              {post.data.tags && post.data.tags.length > 0 && (
+                <div class="flex flex-row gap-2 mt-2">
+                  {post.data.tags.map((tag) => (
+                    <Badge text={tag} />
+                  ))}
+                </div>
+              )}
+
+              <div class="flex flex-row justify-between flex-wrap mt-1 ">
+                <div class="text-sm mt-2 flex flex-nowrap items-center justify-center gap-1 text-(--sl-color-gray-3) ">
+                  <LocalIcon name="mdi:calendar-month" />
+
+                  <time
+                    class="mt-0"
+                    datetime={post.data.created?.toISOString()}
+                  >
+                    {post.data.created?.toLocaleDateString(lang, {
+                      dateStyle: "medium",
+                      timeZone: "UTC",
+                    })}
+                  </time>
+                </div>
+                {post.data.authors && post.data.authors.length > 0 && (
+                  <AuthorsList authors={post.data.authors ?? []} />
+                )}
+              </div>
+            </Card>
+          </div>
+        );
+      })
     )
   }
 

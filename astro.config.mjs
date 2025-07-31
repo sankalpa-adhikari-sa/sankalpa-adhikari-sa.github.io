@@ -149,6 +149,25 @@ export default defineConfig({
           },
           {
             label: {
+              en: "Agriculture",
+              ne: "अरू",
+            },
+            link: "/agriculture/",
+            icon: "mdi:agriculture",
+            id: "agriculture",
+            items: [
+              {
+                label: "Agriculture",
+                translations: {
+                  en: "Agriculture",
+                  ne: "कृषि",
+                },
+                autogenerate: { directory: "agriculture" },
+              },
+            ],
+          },
+          {
+            label: {
               en: "Others",
               ne: "अरू",
             },
