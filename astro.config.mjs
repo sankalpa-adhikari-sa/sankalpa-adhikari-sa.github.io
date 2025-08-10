@@ -21,6 +21,7 @@ export default defineConfig({
     "ne/all-docs": "/ne/all-docs/1",
     "/": "/en/",
   },
+  prefetch: true,
 
   integrations: [
     icon(),

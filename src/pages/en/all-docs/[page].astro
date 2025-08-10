@@ -80,7 +80,13 @@ const { page } = Astro.props as { page: Page<CollectionEntry<"docs">> };
     ) : (
       page.data.map((post) => {
         return (
-          <div class="clickable-card cursor-pointer" data-href={`/${post.id}`}>
+          <div
+            role="link"
+            tabindex="0"
+            class="clickable-card cursor-pointer"
+            data-href={`/${post.id}`}
+            aria-label={`Read more about ${post.data.title}`}
+          >
             <Card title={post.data.title}>
               {post.data.subtitle && (
                 <span class="text-sm mt-0 flex flex-wrap text-(--sl-color-gray-3) ">
@@ -125,11 +131,27 @@ const { page } = Astro.props as { page: Page<CollectionEntry<"docs">> };
 </StarlightPage>
 
 <script>
-  document.querySelectorAll(".clickable-card").forEach((card) => {
-    card.addEventListener("click", (e) => {
-      // @ts-ignore
-      const href = card.dataset.href;
-      if (href) window.location.href = href;
-    });
+  import { prefetch } from "astro:prefetch";
+  window.addEventListener("DOMContentLoaded", () => {
+    document
+      .querySelectorAll<HTMLElement>(".clickable-card")
+      .forEach((card) => {
+        const href = card.dataset.href;
+        if (!href) return;
+
+        card.addEventListener("click", () => {
+          window.location.href = href;
+        });
+
+        card.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            window.location.href = href;
+          }
+        });
+
+        card.addEventListener("mouseenter", () => {
+          prefetch(href);
+        });
+      });
   });
 </script>

@@ -91,12 +91,13 @@ const hasAuthors =
 }
 {
   coverImage && (
-    <div class="cover-image sl-hidden md:sl-block">
+    <div class="cover-image">
       <Image
+        fit="cover"
         src={coverImage}
         loading="eager"
         decoding="async"
-        alt={coverImageAlt || ""}
+        alt={coverImageAlt || entry.data.title}
       />
     </div>
   )
