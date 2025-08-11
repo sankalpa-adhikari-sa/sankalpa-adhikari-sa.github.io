@@ -64,7 +64,7 @@ The issue stems from the sequence of API calls KoboToolbox makes when you import
 
 </Steps>
 
-Here's the catch: `Step 1` succeeds and creates an empty asset regardless of whether your XLSForm URL is valid. If the URL is broken or incorrect, `Step 2` will eventually fail to import, but the empty asset from `Step 1` remains in your account, orphaned floating unseen by mortal eyes..
+Here's the catch: `Step 1` succeeds and creates an empty asset regardless of whether your XLSForm URL is valid. If the URL is broken or incorrect, `Step 2` will eventually fail to import, but the empty asset from `Step 1` remains in your account, orphaned, floating unseen by mortal eyes..
 
 You might be thinking,
 
@@ -169,6 +169,20 @@ Like any seasoned Ghostbuster, we’ll trap and get rid of them in a two-step pr
 1. Collect the Ghost UIDs (Empty Assets)
 
     Run the command above again, but this time, you'll want to gather all the uid values from the response. You can increase the limit parameter to get more results at once.
+    <Tabs syncKey="language">
+
+      <TabItem label="Curl">
+
+      ```bash
+      # Replace [kpi_url] and [your_api_token] with your details
+      curl -X GET 'https://[kpi_url]/api/v2/assets/?q=(asset_type:empty)&limit=50&format=json' \
+      -H 'Authorization: Token [your_api_token]' \
+      | jq '[.results[].uid]'
+
+      ```
+    </TabItem>
+
+    </Tabs>
 
 2.  Fire the Proton Pack (Bulk Delete)
 
