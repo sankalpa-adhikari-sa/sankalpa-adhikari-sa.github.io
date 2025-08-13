@@ -39,6 +39,15 @@ export default defineConfig({
             href: "/images/authors/avatar_default.png",
           },
         },
+        {
+          tag: "script",
+          attrs: {
+            "data-goatcounter":
+              "https://sankalpa-adhikari-sa.goatcounter.com/count",
+            async: true,
+            src: "//gc.zgo.at/count.js",
+          },
+        },
       ],
       editLink: {
         baseUrl:

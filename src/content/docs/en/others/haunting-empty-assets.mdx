@@ -72,13 +72,13 @@ You might be thinking,
 
 ## 🕵️ Why You Can’t See Them
 
-You're right they aren't visible. The KoboToolbox UI specifically filters your project list to show only assets of the type survey. The API call your browser makes looks like this:
+You're right they aren't visible. The KoboToolbox UI specifically filters your project list to show only assets of the type `survey`. The API call your browser makes looks like this:
 
 ```bash
 GET https://[kpi_url]/api/v2/assets/?q=(asset_type:survey)&ordering=_deployment_status&limit=50
 ```
 
-However, KoboToolbox supports several asset types, including: survey, question, template, block, collection, and the elusive empty (the ones we’re after).
+However, KoboToolbox supports several asset types, including: `survey`, `question`, `template`, `block`, `collection`, and the elusive `empty` (the ones we’re after).
 
 ## 🔍 Ghost Hunt: Finding the Empty Assets
 
