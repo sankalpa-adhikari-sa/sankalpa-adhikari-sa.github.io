@@ -1,0 +1,160 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import { filterContentForListing } from "@/utils/content";
+
+type SpotlightItem = {
+  title: string;
+  type: "Project" | "Work";
+  href: string;
+  pubDate: Date;
+};
+
+const projects: SpotlightItem[] = filterContentForListing(
+  await getCollection("projects"),
+).map((project) => ({
+  title: project.data.alias || project.data.title,
+  type: "Project",
+  href: `/projects/${project.data.slug ?? project.id}`,
+  pubDate: project.data.pubDate,
+}));
+
+const work: SpotlightItem[] = filterContentForListing(
+  await getCollection("work"),
+).map((item) => ({
+  title: item.data.alias || item.data.title,
+  type: "Work",
+  href: `/work/${item.data.slug ?? item.id}`,
+  pubDate: item.data.pubDate,
+}));
+
+const all = [...projects, ...work].sort(
+  (a, b) => b.pubDate.valueOf() - a.pubDate.valueOf(),
+);
+---
+
+<section id="spotlight-section" class="overflow-hidden pb-24 md:pb-32">
+  <div class="pb-12 md:pb-16">
+    <span
+      class="font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground opacity-0 translate-y-8"
+      data-spotlight-header
+    >
+      Previous Works
+    </span>
+    <h2
+      class="mt-4 text-3xl md:text-4xl font-bold text-foreground tracking-tight text-balance opacity-0 translate-y-8"
+      data-spotlight-header
+    >
+      Previous Projects
+    </h2>
+  </div>
+  {
+    all.map((item) => (
+      <a
+        href={item.href}
+        data-spotlight-item
+        class="group flex flex-row items-center justify-between gap-4 pr-4 uppercase cursor-pointer min-w-0 transition-colors duration-300 hover:bg-tertiary hover:text-background opacity-0 translate-y-8"
+      >
+        <div
+          data-spotlight-content
+          class="flex flex-row items-baseline gap-8 min-w-0 flex-1 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-6"
+        >
+          <span
+            data-spotlight-content-title
+            class="font-sans text-4xl lg:text-5xl xl:text-6xl leading-normal tracking-wide truncate capitalize"
+          >
+            {item.title}
+          </span>
+
+          <span data-spotlight-content-type class="font-mono shrink-0 text-sm">
+            {item.type}
+          </span>
+        </div>
+
+        <Icon
+          data-spotlight-icon
+          name="heroicons:arrow-right-circle-solid"
+          class="size-6 shrink-0 ms-12 lg:ms-48 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:scale-125"
+        />
+      </a>
+    ))
+  }
+</section>
+
+<script>
+  import { audio } from "@/utils/audio";
+  import { gsap } from "@/utils/gsap-init";
+
+  let ctx: gsap.Context | undefined;
+
+  function initSpotlightAnimation() {
+    ctx?.revert();
+
+    ctx = gsap.context(() => {
+      const section = document.getElementById("spotlight-section");
+      const headerItems = document.querySelectorAll<HTMLElement>(
+        "[data-spotlight-header]",
+      );
+      const items = document.querySelectorAll<HTMLElement>(
+        "[data-spotlight-item]",
+      );
+      const onHover = () => {
+        audio.play("hover");
+      };
+
+      const reducedMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+
+      if (reducedMotionQuery.matches) {
+        gsap.set([...headerItems, ...items], { opacity: 1, y: 0 });
+      } else {
+        if (section && headerItems.length) {
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: section,
+                start: "top 85%",
+              },
+            })
+            .to(headerItems, {
+              y: 0,
+              opacity: 1,
+              duration: 0.7,
+              ease: "power3.out",
+              stagger: 0.1,
+            });
+        }
+
+        items.forEach((item) => {
+          gsap.to(item, {
+            y: 0,
+            opacity: 1,
+            duration: 0.8,
+            ease: "power3.out",
+            willChange: "transform, opacity",
+            scrollTrigger: {
+              trigger: item,
+              start: "top 95%",
+              end: "bottom 15%",
+            },
+          });
+        });
+      }
+
+      items.forEach((item) => {
+        item.addEventListener("mouseenter", onHover);
+      });
+
+      return () => {
+        items.forEach((item) => {
+          item.removeEventListener("mouseenter", onHover);
+        });
+      };
+    });
+  }
+
+  document.addEventListener("astro:page-load", initSpotlightAnimation);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>

@@ -1,0 +1,227 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+  class?: string;
+  "aria-label"?: string;
+}
+const { class: className, "aria-label": ariaLabel } = Astro.props;
+---
+
+<div
+  class={"anim-button rounded flex w-max whitespace-nowrap max-h-max items-center relative font-mono"}
+  aria-label={ariaLabel}
+>
+  <div class="backdrop-hover absolute inset-0 rounded bg-white opacity-0"></div>
+  <div
+    class="inner flex gap-x-2.5 h-[calc(50/16*1rem)] items-center justify-center rounded w-full px-4 relative border border-solid border-foreground/20"
+  >
+    <div class="backdrop absolute inset-0 rounded"></div>
+    <div class="text-reveal relative">
+      <div class="anim-target absolute left-0 right-0 text-white" font-mono>
+        <slot />
+      </div>
+      <div class="opacity-0"><slot /></div>
+    </div>
+    <div class="arrow flex items-center">
+      <Icon name="heroicons:arrow-up-right-16-solid" />
+    </div>
+  </div>
+
+  <div
+    class="hover-inner absolute inset-0 items-center justify-center px-4 flex gap-x-2.5 rounded text-foreground"
+  >
+    <div class="text-reveal relative">
+      <div class="anim-target absolute left-0 right-0 font-mono"></div>
+      <div class="opacity-0 text-white"><slot /></div>
+    </div>
+
+    <div class="arrow-hover flex items-center text-white scale-0">
+      <Icon name="heroicons:arrow-up-right-16-solid" />
+    </div>
+  </div>
+</div>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+  const ASCII = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+  function randomChar() {
+    return ASCII[Math.floor(Math.random() * ASCII.length)];
+  }
+  document.querySelectorAll<HTMLElement>(".anim-button").forEach((button) => {
+    if (button.matches(":disabled, [aria-disabled='true']")) return;
+    const backdropHover = button.querySelector<HTMLElement>(".backdrop-hover");
+    const backdrop = button.querySelector<HTMLElement>(".inner .backdrop");
+    const innerTarget = button.querySelector<HTMLElement>(
+      ".inner .anim-target",
+    );
+    const originalText = innerTarget?.textContent?.trim();
+    const innerHoverTarget = button.querySelector<HTMLElement>(
+      ".hover-inner .anim-target",
+    );
+    const arrow = button.querySelector<HTMLElement>(".arrow");
+    const arrowHover = button.querySelector<HTMLElement>(".arrow-hover");
+
+    if (
+      !backdropHover ||
+      !backdrop ||
+      !innerTarget ||
+      !innerHoverTarget ||
+      !originalText ||
+      !arrow ||
+      !arrowHover
+    ) {
+      console.warn("One or more target elements were not found:", {
+        backdropHover,
+        backdrop,
+        innerTarget,
+        innerHoverTarget,
+      });
+      return;
+    }
+
+    let tl: gsap.core.Timeline;
+
+    const enter = () => {
+      console.log(backdrop);
+      console.log(backdropHover);
+      console.log(innerTarget);
+      console.log(innerHoverTarget);
+      tl?.kill();
+
+      tl = gsap.timeline({
+        defualts: {
+          ease: "power3.out",
+        },
+        id: "Button Hover Enter",
+      });
+      tl.to(
+        backdropHover,
+        {
+          opacity: 1,
+          duration: 0.35,
+        },
+        0,
+      );
+      tl.to(
+        backdrop,
+        {
+          opacity: 0,
+          scaleX: 0.98,
+          scaleY: 0.98,
+          duration: 0.35,
+        },
+        0,
+      );
+      tl.to(
+        arrow,
+        {
+          scale: 0,
+          opacity: 0,
+          duration: 0.25,
+        },
+        0,
+      );
+
+      tl.to(
+        arrowHover,
+        {
+          scale: 1,
+          duration: 0.35,
+          ease: "back.out(1.7)",
+          color: "black",
+        },
+        0.05,
+      );
+
+      tl.to(
+        innerHoverTarget,
+        {
+          duration: 0.35,
+          color: "black",
+          scrambleText: {
+            text: originalText,
+            chars: ASCII,
+            revealDelay: 0.1,
+            rightToLeft: false,
+          },
+        },
+        0,
+      );
+      tl.to(
+        innerTarget,
+        {
+          opacity: 0,
+        },
+        0,
+      );
+
+      //   GSDevTools.create({ animation: tl });
+    };
+    const leave = () => {
+      tl?.kill();
+
+      tl = gsap.timeline({
+        defualts: {
+          ease: "power3.out",
+        },
+        id: "Button Hover Out",
+      });
+      tl.to(
+        backdropHover,
+        {
+          opacity: 0,
+          duration: 0.35,
+        },
+        0,
+      );
+      tl.to(
+        backdrop,
+        {
+          opacity: 1,
+          scaleX: 0,
+          scaleY: 0,
+          duration: 0.35,
+        },
+        0,
+      );
+      tl.to(
+        innerHoverTarget,
+        {
+          duration: 0.35,
+          color: "white",
+          scrambleText: {
+            text: originalText,
+            chars: ASCII,
+            revealDelay: 0.2,
+            rightToLeft: true,
+          },
+        },
+        0,
+      );
+      tl.to(
+        arrow,
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.35,
+        },
+        0,
+      );
+
+      tl.to(
+        arrowHover,
+        {
+          scale: 0,
+          duration: 0.2,
+        },
+        0,
+      );
+    };
+    button.addEventListener("mouseenter", enter);
+    button.addEventListener("mouseleave", leave);
+    // --- DEBUG ONLY: Trigger the animation automatically on load ---
+    // enter();
+  });
+</script>

@@ -1,0 +1,389 @@
+---
+import { Icon } from "astro-icon/components";
+import { getConfig } from "@/config/config";
+
+const config = getConfig();
+
+const navElements = [
+  {
+    name: "Home",
+    group: "nav-items",
+    href: "/",
+  },
+
+  {
+    name: "Articles",
+    group: "nav-items",
+    href: "/articles",
+    icon: "heroicons:arrow-up-right-16-solid",
+  },
+  {
+    name: "Projects",
+    group: "nav-items",
+    href: "/projects",
+    icon: "heroicons:arrow-up-right-16-solid",
+  },
+  {
+    name: "Work",
+    group: "nav-items",
+    href: "/work",
+  },
+  {
+    name: "Let's connect",
+    group: "nav-items-footer",
+    href: `mailto:${config.author.contactEmail}?subject=Let's%20Work%20Together&body=I%20came%20across%20your%20portfolio%20and%20would%20love%20to%20discuss%20a%20potential%20project%2C%20collaboration%2C%20or%20opportunity.Here%20are%20a%20few%20details%3A%E2%80%A2%20Project%20%2F%20Company%3A%E2%80%A2%20Project%20overview%3A%E2%80%A2%20Timeline%3A%E2%80%A2%20Budget%20(optional)%3A%E2%80%A2%20Website%20or%20reference%20links%3A%E2%80%A2%20Additional%20details%3ALooking%20forward%20to%20hearing%20from%20you!Best%2C%5BYour%20Name%5D`,
+  },
+  {
+    name: "Resume",
+    icon: "heroicons:paper-clip",
+    group: "nav-items-footer",
+    href: "https://www.linkedin.com/in/sankalpa-adhikari-sa",
+    external: true,
+  },
+];
+---
+
+<nav
+  data-nav
+  class="fixed left-1/2 top-4 z-20 w-3/4 -translate-x-1/2 rounded-md border border-border bg-background/80 text-foreground backdrop-blur-md shadow-lg"
+>
+  <div
+    data-nav-trigger
+    class="relative flex h-13 cursor-pointer items-center justify-between px-4 pt-0.5 text-foreground"
+  >
+    <span class="font-mono text-lg font-medium leading-loose tracking-wider"
+      >SA</span
+    >
+
+    <span
+      data-nav-message
+      class="font-mono text-sm text-muted-foreground transition-opacity"
+    >
+      Hello there
+    </span>
+
+    <div class="flex items-center gap-5">
+      <button
+        id="search-trigger"
+        type="button"
+        command="show-modal"
+        commandfor="command-palette"
+        class="flex items-center justify-center transition-colors hover:text-muted-foreground cursor-pointer px-4"
+        aria-label="Open Search"
+      >
+        <Icon name="heroicons:magnifying-glass-16-solid" class="size-5" />
+      </button>
+      <span class="flex flex-col gap-1">
+        <span data-line-1 class="block h-0.5 w-5 bg-foreground"></span>
+        <span data-line-2 class="block h-0.5 w-5 bg-foreground"></span>
+        <span data-line-3 class="block h-0.5 w-5 bg-foreground"></span>
+      </span>
+    </div>
+
+    <div
+      data-trigger-border
+      class="absolute bottom-0 left-0 right-0 h-px bg-border opacity-0"
+    >
+    </div>
+  </div>
+
+  <div data-nav-content class="overflow-hidden" style="height: 0; opacity: 0;">
+    <div data-nav-links class="flex flex-col">
+      {
+        navElements
+          .filter((item) => item.group === "nav-items")
+          .map((item) => (
+            <a
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+              data-nav-link
+              class="group relative flex h-13 cursor-pointer items-center border-b border-border px-8 text-foreground transition-colors"
+            >
+              <div class="absolute inset-0 dark:bg-white/10 bg-black/10 opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <div
+                data-nav-link-content
+                class="relative z-10 flex w-full items-center justify-between"
+                style="opacity: 0; transform: translateY(8px);"
+              >
+                <span class="pt-0.5">{item.name}</span>
+                {item.icon && (
+                  <Icon
+                    name={item.icon}
+                    class="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground"
+                  />
+                )}
+              </div>
+            </a>
+          ))
+      }
+    </div>
+
+    <div data-nav-buttons class="flex gap-2 p-4">
+      {
+        navElements
+          .filter((item) => item.group === "nav-items-footer")
+          .map((item, index) => (
+            <a
+              href={item.href}
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noopener noreferrer" : undefined}
+              class={`flex flex-1 items-center justify-center gap-2 rounded-md p-4 font-mono text-sm uppercase transition-colors ${
+                index === 0
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                  : "border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}
+            >
+              <span>{item.name}</span>
+              {item.icon && <Icon name={item.icon} class="h-4 w-4" />}
+            </a>
+          ))
+      }
+    </div>
+  </div>
+</nav>
+<script>
+  import { gsap } from "@/utils/gsap-init";
+  import { audio } from "@/utils/audio";
+
+  const searchBtn = document.getElementById("search-trigger");
+  const onSearchClick = (e: Event) => {
+    e.stopPropagation();
+    const dialog = document.getElementById(
+      "command-palette",
+    ) as HTMLDialogElement | null;
+    dialog?.showModal();
+  };
+  searchBtn?.addEventListener("click", onSearchClick);
+
+  let ctx: gsap.Context | undefined;
+
+  function initNavAnimation() {
+    ctx?.revert();
+
+    const nav = document.querySelector<HTMLElement>("[data-nav]");
+    if (!nav) return;
+
+    ctx = gsap.context(() => {
+      const trigger = nav.querySelector("[data-nav-trigger]");
+      const triggerBorder = nav.querySelector("[data-trigger-border]");
+      const content = nav.querySelector("[data-nav-content]");
+      const links = nav.querySelectorAll("[data-nav-link-content]");
+      const navItemLinks = nav.querySelectorAll("[data-nav-link]");
+      const message = nav.querySelector<HTMLElement>("[data-nav-message]");
+
+      const line1 = nav.querySelector("[data-line-1]");
+      const line2 = nav.querySelector("[data-line-2]");
+      const line3 = nav.querySelector("[data-line-3]");
+
+      if (
+        !trigger ||
+        !triggerBorder ||
+        !content ||
+        !message ||
+        !line1 ||
+        !line2 ||
+        !line3
+      ) {
+        return;
+      }
+
+      const onLinkHover = () => {
+        audio.play("pop");
+      };
+
+      navItemLinks.forEach((link) => {
+        link.addEventListener("mouseenter", onLinkHover);
+      });
+
+      let isOpen = false;
+
+      message.style.whiteSpace = "nowrap";
+
+      function renderSpans(text: string) {
+        if (!message) return [];
+        message.textContent = "";
+        const spans = text.split("").map((char) => {
+          const span = document.createElement("span");
+          span.textContent = char === " " ? "\u00A0" : char;
+          span.style.display = "inline-block";
+          span.style.willChange = "transform, opacity";
+          message.appendChild(span);
+          return span;
+        });
+        return spans;
+      }
+
+      const initialText = message.textContent?.trim() ?? "Hello there";
+      let currentMessageText = initialText;
+      renderSpans(currentMessageText);
+
+      function setMessage(text: string) {
+        if (!message || text === currentMessageText) return;
+        currentMessageText = text;
+
+        const oldSpans = Array.from(message.children) as HTMLElement[];
+        gsap.killTweensOf(oldSpans);
+
+        const tl = gsap.timeline();
+
+        tl.to(oldSpans, {
+          opacity: 0,
+          y: -6,
+          duration: 0.15,
+          stagger: 0.01,
+          ease: "power2.in",
+        }).add(() => {
+          const newSpans = renderSpans(text);
+          gsap.fromTo(
+            newSpans,
+            { opacity: 0, y: 8 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.35,
+              stagger: 0.015,
+              ease: "power2.out",
+            },
+          );
+        });
+      }
+
+      const idleMessages = [
+        "Hello there",
+        "Let's connect",
+        "Let's build together",
+        "  ",
+      ];
+      let idleIndex = 0;
+      let idleInterval: ReturnType<typeof setInterval> | undefined;
+
+      function startIdleRotation() {
+        if (idleInterval) return;
+        idleInterval = setInterval(() => {
+          idleIndex = (idleIndex + 1) % idleMessages.length;
+          setMessage(idleMessages[idleIndex]);
+        }, 4500);
+      }
+
+      function stopIdleRotation() {
+        if (!idleInterval) return;
+        clearInterval(idleInterval);
+        idleInterval = undefined;
+      }
+
+      idleIndex = 0;
+      startIdleRotation();
+
+      const sections = Array.from(
+        document.querySelectorAll("[data-nav-section-message]"),
+      ) as HTMLElement[];
+
+      let currentActiveSection: HTMLElement | null = null;
+
+      function checkNavOverlap() {
+        if (!nav) return;
+
+        const navRect = nav.getBoundingClientRect();
+
+        let bestSection: HTMLElement | null = null;
+        let bestOverlap = 0;
+
+        sections.forEach((section) => {
+          const rect = section.getBoundingClientRect();
+          const overlap =
+            Math.min(navRect.bottom, rect.bottom) -
+            Math.max(navRect.top, rect.top);
+
+          if (overlap > 0 && overlap > bestOverlap) {
+            bestOverlap = overlap;
+            bestSection = section;
+          }
+        });
+
+        if (bestSection === currentActiveSection) return;
+        currentActiveSection = bestSection;
+
+        if (bestSection) {
+          stopIdleRotation();
+          const text =
+            (bestSection as HTMLElement).getAttribute(
+              "data-nav-section-message",
+            ) ?? idleMessages[0];
+          setMessage(text);
+        } else {
+          idleIndex = 0;
+          setMessage(idleMessages[0]);
+          startIdleRotation();
+        }
+      }
+
+      let ticking = false;
+      function onScrollOrResize() {
+        if (ticking) return;
+        ticking = true;
+        requestAnimationFrame(() => {
+          checkNavOverlap();
+          ticking = false;
+        });
+      }
+
+      window.addEventListener("scroll", onScrollOrResize, { passive: true });
+      window.addEventListener("resize", onScrollOrResize);
+      checkNavOverlap();
+
+      const tl = gsap.timeline({
+        paused: true,
+        defaults: {
+          ease: "power3.inOut",
+        },
+      });
+
+      tl.to(content, {
+        height: "auto",
+        opacity: 1,
+        duration: 0.45,
+      })
+        .fromTo(triggerBorder, { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0)
+        .fromTo(line1, { y: 0 }, { y: 6, duration: 0.25 }, 0)
+        .fromTo(line2, { opacity: 1 }, { opacity: 0, duration: 0.2 }, 0)
+        .fromTo(line3, { y: 0 }, { y: -6, duration: 0.25 }, 0)
+        .fromTo(
+          links,
+          { y: 8, opacity: 0 },
+          { y: -4, opacity: 1, stagger: 0.05, duration: 0.3 },
+          0.1,
+        );
+
+      const onClick = (e: Event) => {
+        if ((e.target as HTMLElement).closest("#search-trigger")) {
+          return;
+        }
+        isOpen = !isOpen;
+        audio.play("click");
+
+        if (isOpen) {
+          tl.play();
+        } else {
+          tl.reverse();
+        }
+      };
+
+      trigger.addEventListener("click", onClick);
+
+      return () => {
+        trigger.removeEventListener("click", onClick);
+        window.removeEventListener("scroll", onScrollOrResize);
+        window.removeEventListener("resize", onScrollOrResize);
+        stopIdleRotation();
+
+        navItemLinks.forEach((link) => {
+          link.removeEventListener("mouseenter", onLinkHover);
+        });
+      };
+    });
+  }
+
+  document.addEventListener("astro:page-load", initNavAnimation);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>

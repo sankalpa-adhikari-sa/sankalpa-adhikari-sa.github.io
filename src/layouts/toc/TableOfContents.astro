@@ -1,0 +1,121 @@
+---
+import type { MarkdownHeading } from "astro";
+import TableOfContentsList from "./TableOfContentsList.astro";
+import { buildToc } from "./toc";
+
+interface Props {
+  headings: MarkdownHeading[];
+  minHeadingLevel?: number;
+  maxHeadingLevel?: number;
+}
+
+const { headings, minHeadingLevel = 1, maxHeadingLevel = 3 } = Astro.props;
+const toc = buildToc(headings, {
+  minLevel: minHeadingLevel,
+  maxLevel: maxHeadingLevel,
+});
+---
+
+{
+  toc.length > 0 && (
+    <aside class="toc-wrapper" data-pagefind-ignore>
+      <toc-nav class="toc">
+        <nav aria-label="Table of contents">
+          <div class="toc-inner">
+            <p class="toc-header-text">On this page</p>
+
+            <TableOfContentsList toc={toc} />
+
+            <svg class="toc-marker" xmlns="http://www.w3.org/2000/svg">
+              <path
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-dasharray="1 0 0 1000"
+                stroke-dashoffset="1"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </nav>
+      </toc-nav>
+    </aside>
+  )
+}
+<style>
+  .toc-wrapper {
+    display: none;
+    position: sticky;
+    top: 6rem;
+    height: max-content;
+  }
+
+  @media (min-width: 1280px) {
+    .toc-wrapper {
+      display: block;
+    }
+  }
+
+  .toc {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    font-optical-sizing: auto;
+    font-variant-caps: all-small-caps;
+    font-variant-numeric: tabular-nums;
+    font-variant-ligatures: common-ligatures;
+    letter-spacing: var(--tracking-tight);
+  }
+  .toc-header-text {
+    font-size: 1.4em;
+    font-weight: 500;
+    list-style: none;
+    padding-bottom: 10px;
+  }
+
+  .toc nav {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    max-height: calc(100vh - 4rem);
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .toc-inner {
+    position: relative;
+  }
+
+  .toc nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .toc-marker {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    color: var(--color-primary);
+    transition: color var(--duration-fast) var(--ease-in-out);
+  }
+  .toc-marker path {
+    transition:
+      stroke-dasharray 0.3s ease,
+      opacity 0.3s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .toc-marker path {
+      transition: none;
+    }
+  }
+</style>
+<script>
+  import { TocTracker } from "./toc-tracker";
+
+  if (!customElements.get("toc-nav")) {
+    customElements.define("toc-nav", TocTracker);
+  }
+</script>

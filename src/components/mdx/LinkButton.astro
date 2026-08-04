@@ -1,0 +1,69 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+interface Props extends HTMLAttributes<"a"> {
+  href: string;
+  variant?: "primary" | "secondary" | "outline";
+  icon?: string;
+  iconPlacement?: "start" | "end";
+}
+
+const {
+  href,
+  variant = "primary",
+  icon,
+  iconPlacement = "start",
+  class: className = "",
+  ...rest
+} = Astro.props;
+
+const isExternal = /^https?:\/\//.test(href);
+
+const target = rest.target ?? (isExternal ? "_blank" : undefined);
+const rel = rest.rel ?? (isExternal ? "noopener noreferrer" : undefined);
+
+const variants = {
+  primary:
+    "bg-neutral-900 text-white hover:bg-neutral-800 focus-visible:ring-neutral-900",
+  secondary:
+    "bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus-visible:ring-neutral-400",
+  outline:
+    "border border-neutral-300 bg-transparent text-neutral-900 hover:bg-neutral-100 focus-visible:ring-neutral-400",
+} satisfies Record<NonNullable<Props["variant"]>, string>;
+---
+
+<a
+  href={href}
+  target={target}
+  rel={rel}
+  class:list={[
+    "inline-flex items-center justify-center gap-2 rounded-md px-4 py-3",
+    "text-sm leading-none font-medium whitespace-nowrap",
+    "transition-colors duration-200",
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2",
+    "disabled:pointer-events-none disabled:opacity-50",
+    variants[variant],
+    className,
+  ]}
+  {...rest}
+>
+  {
+    icon && iconPlacement === "start" && (
+      <span class="flex size-4 items-center justify-center shrink-0">
+        <Icon name={icon} class="block size-4" aria-hidden="true" />
+      </span>
+    )
+  }
+  <span class="leading-none [&_p]:m-0 [&_p]:inline [&_p]:leading-inherit">
+    <slot />
+  </span>
+
+  {
+    icon && iconPlacement === "end" && (
+      <span class="flex size-4 items-center justify-center shrink-0">
+        <Icon name={icon} class="block size-4" aria-hidden="true" />
+      </span>
+    )
+  }
+</a>

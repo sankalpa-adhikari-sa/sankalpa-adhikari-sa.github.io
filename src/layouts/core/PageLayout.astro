@@ -1,0 +1,29 @@
+---
+import { ClientRouter } from "astro:transitions";
+import CommandPalette from "@/components/CommandPalette.astro";
+import NavBar from "@/components/core/NavBar.astro";
+import BaseHead from "@/layouts/core/BaseHead.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  image?: ImageMetadata;
+  dataPagefindIgnore?: "index" | "all";
+}
+
+const { title, description, image, dataPagefindIgnore } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <ClientRouter />
+    <BaseHead title={title} description={description} image={image} />
+  </head>
+  <body class="m-3 lg:m-6" data-pagefind-ignore={dataPagefindIgnore}>
+    <NavBar />
+    <main class="min-h-screen">
+      <slot />
+    </main>
+    <CommandPalette />
+  </body>
+</html>

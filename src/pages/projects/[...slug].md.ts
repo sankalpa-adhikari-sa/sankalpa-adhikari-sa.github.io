@@ -1,0 +1,56 @@
+import { getCollection } from "astro:content";
+import type { APIRoute } from "astro";
+import { getConfig } from "@/config/config";
+import { filterContentForPage } from "@/utils/content";
+
+export async function getStaticPaths() {
+	const posts = filterContentForPage(await getCollection("projects"));
+	return posts.map((post) => ({
+		params: { slug: post.id },
+		props: { post },
+	}));
+}
+
+export const GET: APIRoute = async ({ props }) => {
+	const { post } = props;
+	const llmsTxtUrl = `${getConfig().site.url}/llms.txt`;
+
+	// Build markdown with title as H1, followed by a pointer to the site index
+	// for agents (afdocs llms-txt-directive-md).
+	let markdown = `# ${post.data.title}\n\n> For the complete site index, see [llms.txt](${llmsTxtUrl})\n\n`;
+
+	// Handle articles with no body content
+	if (!post.body || post.body.trim() === "") {
+		return new Response(markdown.trim(), {
+			headers: {
+				"Content-Type": "text/markdown; charset=utf-8",
+			},
+		});
+	}
+
+	// Remove import statements only from the top of MDX files
+	const lines = post.body.split("\n");
+	let contentStartIndex = 0;
+
+	for (let i = 0; i < lines.length; i++) {
+		const trimmed = lines[i].trim();
+		// Skip import statements and empty lines at the top
+		if (trimmed.startsWith("import ") || trimmed === "") {
+			contentStartIndex = i + 1;
+		} else {
+			// Hit actual content, stop stripping
+			break;
+		}
+	}
+
+	const bodyContent = lines.slice(contentStartIndex).join("\n");
+
+	// Add cleaned body content (MDX components remain as-is)
+	markdown += bodyContent;
+
+	return new Response(markdown, {
+		headers: {
+			"Content-Type": "text/markdown; charset=utf-8",
+		},
+	});
+};

@@ -1,0 +1,63 @@
+---
+import type { HTMLAttributes } from "astro/types";
+
+export interface Props extends HTMLAttributes<"a"> {
+  href: string;
+  isExternal?: boolean;
+}
+
+const {
+  href,
+  isExternal: isExternalProp,
+  class: className,
+  ...props
+} = Astro.props;
+
+// Determine if the URL is external dynamically relative to the current host
+function checkIsExternal(url: string): boolean {
+  if (!url || !/^https?:\/\//i.test(url)) return false;
+
+  try {
+    const linkHost = new URL(url).hostname;
+    const currentHost = Astro.url.hostname;
+
+    // External if host doesn't match current host or any of its subdomains
+    return linkHost !== currentHost && !linkHost.endsWith(`.${currentHost}`);
+  } catch {
+    return false;
+  }
+}
+
+const isExternal = isExternalProp ?? checkIsExternal(href);
+---
+
+<a
+  href={href}
+  target={isExternal ? "_blank" : undefined}
+  rel={isExternal ? "noopener noreferrer" : undefined}
+  class:list={[{ external: isExternal }, className]}
+  {...props}
+>
+  <slot />
+</a>
+
+<style>
+  .external {
+    position: relative;
+    padding-inline-end: 0.37em;
+  }
+
+  .external::after {
+    content: "↗";
+    position: absolute;
+    font-family:
+      system-ui,
+      -apple-system,
+      sans-serif; /* System fonts have this glyph */
+    font-size: 0.6em;
+    font-weight: 600;
+    margin-inline-start: 0.1em;
+    translate: 0 0.25em;
+    opacity: 0.5;
+  }
+</style>

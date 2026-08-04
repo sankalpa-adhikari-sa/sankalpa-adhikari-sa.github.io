@@ -1,0 +1,83 @@
+---
+import { BlueskyPost, MastodonPost, Tweet, Vimeo, YouTube } from "astro-embed";
+
+export interface Props {
+  url: string;
+  className?: string;
+}
+
+const { url, className = "" } = Astro.props;
+
+function getYouTubeId(url: string) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]+)/);
+  return match ? match[1] : null;
+}
+
+function getTweetId(url: string) {
+  const match = url.match(/twitter\.com\/[\w]+\/status\/([0-9]+)/);
+  return match ? match[1] : null;
+}
+
+function getVimeoId(url: string) {
+  const match = url.match(/vimeo\.com\/([0-9]+)/);
+  return match ? match[1] : null;
+}
+
+function getLoomId(url: string) {
+  const match = url.match(/loom\.com\/(?:share|embed)\/([a-f0-9]+)/);
+  return match ? match[1] : null;
+}
+
+function getBlueskyUrl(url: string) {
+  // bsky.app post URLs, e.g. https://bsky.app/profile/<handle>/post/<rkey>.
+  // BlueskyPost takes the full URL (or at:// URI) as its id, so pass it through.
+  return /^https?:\/\/bsky\.app\/profile\/[^/]+\/post\/[\w.-]+/.test(url)
+    ? url
+    : null;
+}
+
+function getMastodonUrl(url: string) {
+  // Mastodon is federated, so there's no single domain — match the fediverse
+  // status shape https://<instance>/@<user>/<numeric-id>. MastodonPost takes the
+  // full URL as its id, so pass it through.
+  return /^https?:\/\/[^/]+\/@[\w.-]+\/\d+\/?$/.test(url) ? url : null;
+}
+
+type EmbedType =
+  | { type: "youtube"; id: string }
+  | { type: "tweet"; id: string }
+  | { type: "vimeo"; id: string }
+  | { type: "loom"; id: string }
+  | { type: "bluesky"; url: string }
+  | { type: "mastodon"; url: string }
+  | null;
+
+function resolveEmbedType(url: string): EmbedType {
+  const youtubeId = getYouTubeId(url);
+  if (youtubeId) return { type: "youtube", id: youtubeId };
+
+  const tweetId = getTweetId(url);
+  if (tweetId) return { type: "tweet", id: tweetId };
+
+  const vimeoId = getVimeoId(url);
+  if (vimeoId) return { type: "vimeo", id: vimeoId };
+
+  const loomId = getLoomId(url);
+  if (loomId) return { type: "loom", id: loomId };
+
+  const blueskyUrl = getBlueskyUrl(url);
+  if (blueskyUrl) return { type: "bluesky", url: blueskyUrl };
+
+  const mastodonUrl = getMastodonUrl(url);
+  if (mastodonUrl) return { type: "mastodon", url: mastodonUrl };
+  return null;
+}
+
+const embed = resolveEmbedType(url);
+---
+
+{embed?.type === "youtube" && <YouTube id={embed.id} />}
+{embed?.type === "tweet" && <Tweet id={embed.id} />}
+{embed?.type === "vimeo" && <Vimeo id={embed.id} />}
+{embed?.type === "bluesky" && <BlueskyPost id={embed.url} />}
+{embed?.type === "mastodon" && <MastodonPost id={embed.url} />}

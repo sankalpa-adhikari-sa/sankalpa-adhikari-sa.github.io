@@ -1,0 +1,206 @@
+---
+import cimmytLogo from "@/assets/organizations/cimmyt.svg";
+import dechargeLogo from "@/assets/organizations/decharge.svg";
+import nsaeLogo from "@/assets/organizations/nsae.png";
+
+const companies = [
+  {
+    id: 1,
+    name: "CIMMYT",
+    logo: cimmytLogo,
+    className: "h-10 px-8",
+  },
+  {
+    id: 2,
+    name: "NSAE",
+    logo: nsaeLogo,
+    className: "h-28",
+  },
+  {
+    id: 3,
+    name: "Decharge",
+    logo: dechargeLogo,
+    className: "",
+  },
+];
+---
+
+<section
+  id="companies-section"
+  class="overflow-hidden pb-24 md:pb-32 flex flex-col"
+>
+  <div class="mb-28">
+    <p
+      class="mb-3 font-mono text-sm uppercase tracking-[0.3em] text-muted-foreground opacity-0 translate-y-8"
+      data-companies-header
+    >
+      Selected Work
+    </p>
+
+    <h2
+      class="text-5xl font-medium tracking-tight opacity-0 translate-y-8"
+      data-companies-header
+    >
+      Companies & Organizations
+    </h2>
+
+    <p
+      class="mt-6 max-w-2xl text-lg text-muted-foreground opacity-0 translate-y-8"
+      data-companies-header
+    >
+      I've contributed to products, research initiatives, and engineering
+      projects across startups and international organizations.
+    </p>
+  </div>
+  <div data-marquee>
+    <div data-track class="flex shrink-0">
+      {
+        companies.map((c) => (
+          <div
+            data-marquee-item
+            class="flex h-72 w-70 shrink-0 items-center justify-center border bg-background"
+          >
+            <img
+              src={c.logo.src}
+              alt={c.name}
+              class:list={["w-auto max-w-full object-contain", c.className]}
+            />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <div data-marquee>
+    <div data-track class="flex shrink-0">
+      {
+        companies.map((c) => (
+          <div
+            data-marquee-item
+            class="flex h-72 w-70 shrink-0 items-center justify-center border bg-background"
+          >
+            <img
+              src={c.logo.src}
+              alt={c.name}
+              class:list={["w-auto max-w-full object-contain", c.className]}
+            />
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap, Observer } from "@/utils/gsap-init";
+  import {
+    horizontalLoop,
+    type HorizontalLoopTimeline,
+  } from "@/utils/horizontal-loop";
+  import { ensureMarqueeFillsViewport } from "@/utils/marquee";
+
+  let ctx: gsap.Context | undefined;
+
+  function initRow(
+    row: HTMLElement,
+    direction: 1 | -1,
+  ): HorizontalLoopTimeline | null {
+    const track = row.querySelector<HTMLElement>("[data-track]");
+    if (!track) return null;
+
+    ensureMarqueeFillsViewport(track, window.innerWidth * 2);
+
+    const items = gsap.utils.toArray<HTMLElement>(
+      track.querySelectorAll("[data-marquee-item]"),
+    );
+    if (!items.length) return null;
+
+    return horizontalLoop(items, {
+      repeat: -1,
+      paddingRight: 0,
+      reversed: direction === -1,
+    });
+  }
+
+  function initCompaniesShowcaseAnimation() {
+    ctx?.revert();
+
+    ctx = gsap.context(() => {
+      const section = document.getElementById("companies-section");
+      const headerItems = document.querySelectorAll<HTMLElement>(
+        "[data-companies-header]",
+      );
+
+      const reducedMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+
+      if (reducedMotionQuery.matches) {
+        gsap.set(headerItems, { opacity: 1, y: 0 });
+      } else if (section && headerItems.length) {
+        gsap
+          .timeline({
+            scrollTrigger: {
+              trigger: section,
+              start: "top 85%",
+            },
+          })
+          .to(headerItems, {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            ease: "power3.out",
+            stagger: 0.1,
+          });
+      }
+
+      const rows = gsap.utils.toArray<HTMLElement>("[data-marquee]");
+
+      const rowConfigs = rows
+        .map((row, i) => {
+          const baseDirection: 1 | -1 = i % 2 === 0 ? 1 : -1;
+          return {
+            loop: initRow(row, baseDirection),
+            baseDirection,
+          };
+        })
+        .filter(
+          (
+            r,
+          ): r is {
+            loop: HorizontalLoopTimeline;
+            baseDirection: 1 | -1;
+          } => r.loop !== null,
+        );
+
+      if (!rowConfigs.length) return;
+
+      Observer.create({
+        onChangeY(self) {
+          let factor = 2.5;
+          if (self.deltaY < 0) factor *= -1;
+
+          rowConfigs.forEach(({ loop, baseDirection }) => {
+            const directedFactor = factor * baseDirection;
+
+            gsap
+              .timeline({ defaults: { ease: "none" } })
+              .to(loop, {
+                timeScale: directedFactor * 2.5,
+                duration: 0.2,
+                overwrite: true,
+              })
+              .to(
+                loop,
+                { timeScale: directedFactor / 2.5, duration: 1 },
+                "+=0.3",
+              );
+          });
+        },
+      });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initCompaniesShowcaseAnimation);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>

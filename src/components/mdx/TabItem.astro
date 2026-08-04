@@ -1,0 +1,16 @@
+---
+export interface Props {
+  label: string;
+  icon?: string;
+}
+
+const { label, icon } = Astro.props;
+
+if (!label) {
+  throw new Error("Missing prop `label` on `<TabItem>` component.");
+}
+---
+
+<starlight-tab-item data-label={label} data-icon={icon}>
+  <slot />
+</starlight-tab-item>

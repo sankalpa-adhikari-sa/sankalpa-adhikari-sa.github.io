@@ -1,0 +1,95 @@
+---
+import { processSteps } from "@/lib/steps/process-steps";
+
+const content = await Astro.slots.render("default");
+const { html } = processSteps(content);
+---
+
+<Fragment set:html={html} />
+
+<style is:global>
+  .sl-steps {
+    /* Smaller, cleaner numbering */
+    --bullet-size: 1.5rem;
+    --bullet-margin: 0.5rem;
+
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    counter-reset: steps-counter var(--sl-steps-start, 0);
+  }
+
+  .sl-steps > li {
+    position: relative;
+    /* This padding is crucial: it creates the vertical space between steps for the line to draw */
+    padding-bottom: 1.5rem;
+    counter-increment: steps-counter;
+    padding-inline-start: calc(var(--bullet-size) + 1rem);
+    min-height: calc(var(--bullet-size) + var(--bullet-margin));
+  }
+
+  .sl-steps > li + li {
+    margin-top: 0;
+  }
+
+  /* Remove padding and hide the connecting line on the very last step */
+  .sl-steps > li:last-child {
+    padding-bottom: 0;
+  }
+
+  /* Custom list marker element (The numbered circle) */
+  .sl-steps > li::before {
+    content: counter(steps-counter);
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+
+    /* Center the number */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Typography */
+    font-size: 0.75rem; /* Smaller text for the smaller circle */
+    font-weight: 600;
+
+    /* Sizing and Shape */
+    width: var(--bullet-size);
+    height: var(--bullet-size);
+    border-radius: 9999px;
+    border-width: 1px;
+    border-style: solid;
+
+    /* shadcn/ui CSS variable theming */
+    background-color: var(--color-muted);
+    border-color: var(--color-border);
+    color: var(--color-foreground);
+  }
+
+  /* Vertical guideline linking list numbers */
+  .sl-steps > li::after {
+    --guide-width: 1px;
+    content: "";
+    position: absolute;
+    top: calc(var(--bullet-size) + var(--bullet-margin));
+    bottom: var(--bullet-margin);
+    inset-inline-start: calc((var(--bullet-size) - var(--guide-width)) / 2);
+    width: var(--guide-width);
+    background-color: var(--color-border);
+  }
+
+  /* 
+    Adjust first item inside a step so that it aligns vertically with the number 
+  */
+  .sl-steps > li > :first-child {
+    --lh: 1.5rem; /* Standard text line-height */
+    --shift-y: calc(0.5 * (var(--bullet-size) - var(--lh)));
+    transform: translateY(var(--shift-y));
+    margin-top: 0;
+    margin-bottom: var(--shift-y);
+  }
+
+  .sl-steps > li > :first-child:where(h1, h2, h3, h4, h5, h6) {
+    --lh: 1.75rem; /* Standard heading line-height */
+  }
+</style>

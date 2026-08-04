@@ -1,0 +1,50 @@
+---
+import { Icon } from "astro-icon/components";
+
+export const asideVariants = ["note", "tip", "caution", "danger"] as const;
+export type AsideVariant = (typeof asideVariants)[number];
+
+interface Props {
+  title?: string;
+  type?: AsideVariant;
+  icon?: string;
+}
+
+const { title, type = "note", icon } = Astro.props;
+
+const styles: Record<AsideVariant, string> = {
+  note: "border-blue-500 bg-blue-50 text-blue-900 dark:bg-blue-950/40 dark:text-blue-200",
+  tip: "border-emerald-500 bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
+  caution:
+    "border-amber-500 bg-amber-50 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+  danger:
+    "border-rose-500 bg-rose-50 text-rose-900 dark:bg-rose-950/40 dark:text-rose-200",
+};
+
+const asideIconNames: Record<AsideVariant, string> = {
+  note: "heroicons:information-circle-solid",
+  tip: "heroicons:rocket-launch-solid",
+  caution: "heroicons:exclamation-triangle-solid",
+  danger: "heroicons:x-circle-solid",
+};
+
+const currentStyle = styles[type] || styles.note;
+const displayTitle = title || type.toUpperCase();
+const resolvedIcon = icon || asideIconNames[type];
+---
+
+<aside class={`my-4 rounded-r-lg border rounded-lg  p-4 ${currentStyle}`}>
+  <p
+    class="font-bold tracking-wide uppercase text-xs mb-1 flex items-center gap-1.5 mt-0"
+  >
+    {
+      resolvedIcon && (
+        <Icon class="aside-icon inline-block size-4" name={resolvedIcon} />
+      )
+    }
+    {displayTitle}
+  </p>
+  <div class="text-sm leading-relaxed">
+    <slot />
+  </div>
+</aside>

@@ -1,0 +1,275 @@
+---
+import { getImage } from "astro:assets";
+import { getCollection } from "astro:content";
+import PageLayout from "@/layouts/core/PageLayout.astro";
+import { filterContentForListing } from "@/utils/content";
+
+const works = filterContentForListing(await getCollection("work")).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const worksByMonth = works.reduce((groups, work) => {
+  const key = work.data.pubDate.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  let works = groups.get(key);
+
+  if (!works) {
+    works = [];
+    groups.set(key, works);
+  }
+
+  works.push(work);
+
+  return groups;
+}, new Map<string, typeof works>());
+
+const coverImages = new Map<string, string>();
+for (const work of works) {
+  if (work.data.cover) {
+    const optimized = await getImage({ src: work.data.cover, width: 480 });
+    coverImages.set(work.id, optimized.src);
+  }
+}
+---
+
+<PageLayout title="Work" description="Browse all works">
+  <header
+    class="mb-12 border-b border-primary/15 pb-8 pt-24"
+    data-nav-section-message="Works"
+  >
+    <p
+      class="mb-2 font-mono text-xs uppercase tracking-[0.25em] text-primary/40 opacity-0 translate-y-8"
+      data-reveal
+    >
+      Archive
+    </p>
+
+    <div class="flex items-end justify-between gap-6 mt-4">
+      <div>
+        <h1
+          class="text-4xl font-medium tracking-tight md:text-5xl opacity-0 translate-y-8"
+          data-reveal
+        >
+          Works
+        </h1>
+
+        <p
+          class="mt-2 max-w-xl text-primary/60 opacity-0 translate-y-8"
+          data-reveal
+        >
+          Notes on engineering, design, and everything I'm learning while
+          building.
+        </p>
+      </div>
+
+      <span
+        class="hidden font-mono text-sm text-primary/40 md:block opacity-0 translate-y-8"
+        data-reveal
+      >
+        {works.length} works
+      </span>
+    </div>
+  </header>
+
+  <section class="mt-16">
+    {
+      works.length === 0 ? (
+        <p class="text-muted-foreground">No works found.</p>
+      ) : (
+        [...worksByMonth.entries()].map(([month, works]) => (
+          <section
+            class="grid grid-cols-[10rem_1fr] gap-x-12 text-primary/60 border-t border-primary/20 py-6 first:border-t-0 first:pt-0 max-md:grid-cols-1 max-md:gap-y-4"
+            data-month-group
+          >
+            <h2
+              class="sticky top-8 self-start font-mono text-sm font-medium uppercase tracking-wide max-md:static opacity-0 translate-y-8"
+              data-month-heading
+            >
+              {month}
+            </h2>
+
+            <ul>
+              {works.map((work) => (
+                <li
+                  class="border-b border-primary/15 last:border-b-0 opacity-0 translate-y-8"
+                  data-works-link
+                  data-cover={coverImages.get(work.id) ?? ""}
+                  data-cover-alt={work.data.coverAlt ?? work.data.title}
+                >
+                  <a
+                    href={`/work/${work.data.slug ?? work.id}/`}
+                    class="group flex items-center justify-between gap-6 py-4 transition-colors hover:bg-tertiary hover:text-tertiary-foreground px-4"
+                  >
+                    <span>{work.data.title}</span>
+
+                    <time
+                      datetime={work.data.pubDate.toISOString()}
+                      class="shrink-0 font-mono text-sm tabular-nums"
+                    >
+                      {work.data.pubDate.toLocaleDateString("en-US", {
+                        day: "2-digit",
+                      })}
+                    </time>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      )
+    }
+  </section>
+
+  <div
+    id="article-cover-preview"
+    class="pointer-events-none fixed right-20 top-0 z-50 hidden w-72 opacity-0 md:block"
+    aria-hidden="true"
+  >
+    <img class="aspect-3/2 w-full rounded-md object-cover shadow-xl" alt="" />
+  </div>
+</PageLayout>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+  import { audio } from "@/utils/audio";
+
+  let ctx: gsap.Context | undefined;
+
+  function initArticlesListAnimation() {
+    ctx?.revert();
+
+    ctx = gsap.context(() => {
+      const onLinkHover = () => {
+        audio.play("hover");
+      };
+
+      const preview = document.querySelector<HTMLDivElement>(
+        "#article-cover-preview",
+      );
+      const previewImg = preview?.querySelector("img") ?? null;
+      const desktopQuery = window.matchMedia("(min-width: 48rem)");
+      const reducedMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+
+      if (preview) {
+        gsap.set(preview, { yPercent: -50, scale: 0.95 });
+      }
+
+      const worksLinks =
+        document.querySelectorAll<HTMLElement>("[data-works-link]");
+
+      const cleanupFns: Array<() => void> = [];
+
+      worksLinks.forEach((link) => {
+        link.addEventListener("mouseenter", onLinkHover);
+        cleanupFns.push(() =>
+          link.removeEventListener("mouseenter", onLinkHover),
+        );
+
+        const cover = link.dataset.cover;
+        if (!cover || !preview || !previewImg) return;
+
+        const onEnter = () => {
+          if (!desktopQuery.matches) return;
+
+          previewImg.src = cover;
+          previewImg.alt = link.dataset.coverAlt ?? "";
+
+          const rect = link.getBoundingClientRect();
+          const top = gsap.utils.clamp(
+            140,
+            window.innerHeight - 140,
+            rect.top + rect.height / 2,
+          );
+          const rotation = gsap.utils.random(-5, 5);
+
+          gsap.killTweensOf(preview);
+          gsap.set(preview, { top });
+          gsap.to(preview, {
+            opacity: 1,
+            scale: 1,
+            rotation,
+            duration: 0.35,
+            ease: "power2.out",
+          });
+        };
+
+        const onLeave = () => {
+          gsap.killTweensOf(preview);
+          gsap.to(preview, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.2,
+            ease: "power2.in",
+          });
+        };
+
+        link.addEventListener("mouseenter", onEnter);
+        link.addEventListener("mouseleave", onLeave);
+        cleanupFns.push(() => {
+          link.removeEventListener("mouseenter", onEnter);
+          link.removeEventListener("mouseleave", onLeave);
+        });
+      });
+
+      const monthGroups =
+        document.querySelectorAll<HTMLElement>("[data-month-group]");
+
+      if (reducedMotionQuery.matches) {
+        gsap.set("[data-reveal], [data-month-heading], [data-works-link]", {
+          opacity: 1,
+          y: 0,
+        });
+      } else {
+        gsap.timeline().to("[data-reveal]", {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          stagger: 0.1,
+          ease: "power3.out",
+        });
+
+        monthGroups.forEach((group) => {
+          const heading = group.querySelector("[data-month-heading]");
+          const rows = group.querySelectorAll("[data-works-link]");
+
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: group,
+                start: "top 85%",
+              },
+            })
+            .to(heading, {
+              y: 0,
+              opacity: 1,
+              duration: 0.7,
+              ease: "power3.out",
+            })
+            .to(
+              rows,
+              {
+                y: 0,
+                opacity: 1,
+                duration: 0.6,
+                stagger: 0.05,
+                ease: "power2.out",
+              },
+              "-=0.5",
+            );
+        });
+      }
+
+      return () => {
+        cleanupFns.forEach((fn) => fn());
+      };
+    });
+  }
+
+  document.addEventListener("astro:page-load", initArticlesListAnimation);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>

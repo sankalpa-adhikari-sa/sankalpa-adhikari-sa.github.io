@@ -1,0 +1,109 @@
+---
+import type { TocHeading } from "./toc";
+
+interface Props {
+  toc: TocHeading[];
+  depth?: number;
+  isMobile?: boolean;
+}
+
+const { toc, depth = 0, isMobile = false } = Astro.props;
+---
+
+<ul
+  class:list={["toc-list", { "toc-sublist": depth > 0, isMobile }]}
+  {...depth === 0 ? { "data-lenis-prevent": true } : {}}
+>
+  {
+    toc.map((heading) => (
+      <li>
+        <a href={`#${heading.slug}`} class="toc-link">
+          {heading.text}
+        </a>
+        {heading.children.length > 0 && (
+          <Astro.self
+            toc={heading.children}
+            depth={depth + 1}
+            isMobile={isMobile}
+          />
+        )}
+      </li>
+    ))
+  }
+</ul>
+
+<style define:vars={{ depth }}>
+  .toc-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    /* Root list only: leaves room for the desktop SVG marker on the left. */
+    padding-left: var(--space-m);
+    overscroll-behavior: contain;
+  }
+
+  .toc-sublist {
+    /* Nested lists indent relative to their own depth instead of the
+       fixed single-level padding the root list uses. */
+    padding-left: calc(var(--space-xs) * var(--depth));
+  }
+
+  .toc-list li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .toc-link {
+    display: block;
+    padding: var(--space-2xs) 0;
+    padding-left: var(--space-xs);
+    line-height: var(--leading-snug);
+    color: color-mix(in oklch, var(--color-muted-foreground) 70%, transparent);
+    text-decoration: none;
+    overflow-wrap: break-word;
+    transition: color var(--duration-fast) var(--ease-in-out);
+  }
+
+  .toc-link:hover {
+    color: var(--color-text);
+  }
+
+  li.visible > .toc-link {
+    color: var(--color-foreground);
+  }
+
+  /* Mobile dropdown reuses the same markup with a denser, full-width style
+     closer to a menu list than an inline sidebar TOC. */
+  .isMobile.toc-list {
+    padding-left: 0;
+  }
+
+  .isMobile .toc-link {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-xs);
+    padding-inline: var(--space-s);
+    padding-block: var(--space-2xs);
+    padding-inline-start: calc(var(--space-s) + var(--space-xs) * var(--depth));
+    border-top: 1px solid
+      var(
+        --color-border,
+        color-mix(in oklch, var(--color-foreground) 12%, transparent)
+      );
+    color: var(--color-muted-foreground);
+    font-size: var(--font-size-sm);
+  }
+
+  .isMobile.toc-list:first-child > li:first-child > .toc-link {
+    border-top: 0;
+  }
+
+  .isMobile li.visible > .toc-link {
+    color: var(--color-foreground);
+    background-color: color-mix(
+      in oklch,
+      var(--color-foreground) 8%,
+      transparent
+    );
+  }
+</style>

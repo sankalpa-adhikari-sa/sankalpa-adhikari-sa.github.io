@@ -1,0 +1,21 @@
+---
+import { Icon } from "astro-icon/components";
+---
+
+<button
+  id="theme-toggle"
+  aria-label="Toggle Dark Mode"
+  class="flex items-center text-muted-foreground transition hover:opacity-75 hover:text-foreground cursor-pointer dark:border-red-500"
+>
+  <Icon name="heroicons:sun-16-solid" class="hidden dark:block h-5 w-5" />
+  <Icon name="heroicons:moon-16-solid" class="block dark:hidden h-5 w-5" />
+</button>
+
+<script>
+  document.addEventListener("click", (event) => {
+    const toggle = (event.target as HTMLElement).closest("#theme-toggle");
+    if (!toggle) return;
+    const isDark = document.documentElement.classList.toggle("dark");
+    localStorage.setItem("theme", isDark ? "dark" : "light");
+  });
+</script>

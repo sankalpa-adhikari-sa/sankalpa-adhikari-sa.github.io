@@ -1,0 +1,100 @@
+---
+const facts = [
+  { label: "Based in", value: "Butwal, Lumbini Province, Nepal" },
+  {
+    label: "Education",
+    value: "B.E. Agricultural Engineering, Tribhuvan University",
+  },
+  { label: "Currently", value: "Fullstack Developer @ Decharge Network" },
+  { label: "Availability", value: "Open to remote roles & contracts" },
+];
+---
+
+<section
+  id="about-section"
+  data-nav-section-message="About Me"
+  class="relative w-full pb-24 md:pb-32 bg-background"
+>
+  <div class="grid md:grid-cols-[1.3fr_1fr] gap-12 md:gap-16">
+    <div data-about-item class="opacity-0 translate-y-8">
+      <span
+        class="font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground"
+      >
+        About
+      </span>
+      <h2
+        class="mt-4 text-3xl md:text-4xl font-bold text-foreground tracking-tight text-balance"
+      >
+        Started with field surveys. Now I build the platforms underneath them.
+      </h2>
+      <div class="mt-6 space-y-4 text-lg text-muted-foreground leading-relaxed">
+        <p>
+          I trained as an agricultural engineer, spent a couple of years
+          building data tools for surveys across Nepal, and found I liked
+          building software too. So I dabbled.
+        </p>
+      </div>
+    </div>
+
+    <div data-about-item class="md:pt-16 opacity-0 translate-y-8">
+      <dl
+        class="divide-y divide-border rounded-xl border border-border overflow-hidden"
+      >
+        {
+          facts.map((fact) => (
+            <div class="px-5 py-4">
+              <dt class="font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+                {fact.label}
+              </dt>
+              <dd class="mt-1 text-foreground font-medium">{fact.value}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+
+  let ctx: gsap.Context | undefined;
+
+  function initAboutAnimation() {
+    ctx?.revert();
+
+    const section = document.getElementById("about-section");
+    if (!section) return;
+
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    );
+
+    ctx = gsap.context(() => {
+      const items = document.querySelectorAll<HTMLElement>("[data-about-item]");
+
+      if (reducedMotionQuery.matches) {
+        gsap.set(items, { opacity: 1, y: 0 });
+        return;
+      }
+
+      gsap
+        .timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top 75%",
+          },
+        })
+        .to(items, {
+          y: 0,
+          opacity: 1,
+          duration: 0.7,
+          ease: "power3.out",
+          stagger: 0.15,
+        });
+    });
+  }
+
+  document.addEventListener("astro:page-load", initAboutAnimation);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>

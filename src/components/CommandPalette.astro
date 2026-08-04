@@ -1,0 +1,278 @@
+---
+import { Icon } from "astro-icon/components";
+
+/**
+ * CommandPalette — global command palette built with Tailwind CSS.
+ * Driven by native <dialog> + WAI-ARIA combobox/listbox pattern.
+ */
+
+type PaletteItem = {
+  id: string;
+  label: string;
+  group: "Commands" | "Navigation";
+  href?: string;
+  action?: "copy-url";
+  keywords?: string;
+};
+
+const items: PaletteItem[] = [
+  {
+    id: "cmd-copy-url",
+    label: "Copy URL of this page",
+    group: "Commands",
+    action: "copy-url",
+    keywords: "clipboard link share",
+  },
+  { id: "nav-home", label: "Home", group: "Navigation", href: "/" },
+  {
+    id: "nav-writing",
+    label: "Articles",
+    group: "Navigation",
+    href: "/articles",
+    keywords: "articles blog essays",
+  },
+  {
+    id: "nav-projects",
+    label: "Projects",
+    group: "Navigation",
+    href: "/projects",
+    keywords: "working projects",
+  },
+];
+
+const groups = ["Commands", "Navigation"] as const;
+---
+
+<dialog
+  id="command-palette"
+  closedby="any"
+  aria-label="Command palette"
+  data-lenis-prevent
+  class="fixed inset-0 m-auto mt-[12vh] w-[min(32rem,90vw)] p-0 overflow-hidden overscroll-contain bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95"
+>
+  <div class="cp-box flex flex-col max-h-[70vh]">
+    <input
+      type="text"
+      class="cp-input flex-none w-full px-4 py-3.5 bg-transparent border-b border-zinc-200 dark:border-zinc-800 text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-500 outline-none focus:outline-none"
+      role="combobox"
+      aria-expanded="true"
+      aria-controls="cp-listbox"
+      aria-autocomplete="list"
+      aria-label="Search commands and pages"
+      placeholder="Type a command or search…"
+      autocomplete="off"
+      spellcheck="false"
+      autofocus
+    />
+
+    <ul
+      id="cp-listbox"
+      class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-2 space-y-2"
+      role="listbox"
+      aria-label="Results"
+    >
+      {
+        groups.map((group) => (
+          <li
+            role="group"
+            aria-labelledby={`cp-grouplabel-${group}`}
+            class="[&:not(:has(.cp-option:not([hidden])))]:hidden"
+          >
+            <span
+              id={`cp-grouplabel-${group}`}
+              class="px-2 py-1 text-[10px] font-semibold tracking-wider text-zinc-400 dark:text-zinc-500 uppercase block select-none"
+              role="presentation"
+            >
+              {group}
+            </span>
+            <ul role="presentation" class="space-y-0.5">
+              {items
+                .filter((item) => item.group === group)
+                .map((item) => (
+                  <li>
+                    <a
+                      id={item.id}
+                      role="option"
+                      class="cp-option block px-3 py-2 rounded-lg text-sm font-medium text-zinc-700 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 data-[active=true]:bg-zinc-900 dark:data-[active=true]:bg-zinc-100 data-[active=true]:text-white dark:data-[active=true]:text-zinc-900 transition-colors cursor-pointer select-none"
+                      href={item.href}
+                      tabindex="-1"
+                      data-action={item.action}
+                      data-keywords={item.keywords}
+                    >
+                      {item.label}
+                    </a>
+                  </li>
+                ))}
+            </ul>
+          </li>
+        ))
+      }
+
+      <li
+        role="group"
+        aria-labelledby="cp-grouplabel-content"
+        class="cp-results-group [&:not(:has(.cp-option:not([hidden])))]:hidden"
+      >
+        <span
+          id="cp-grouplabel-content"
+          class="px-2 py-1 text-[10px] font-semibold tracking-wider text-zinc-400 dark:text-zinc-500 uppercase block select-none"
+          role="presentation">Content</span
+        >
+        <ul id="cp-results-list" role="presentation" class="space-y-0.5"></ul>
+      </li>
+    </ul>
+
+    <p
+      class="cp-empty hidden [.cp-box:not(:has(.cp-option:not([hidden])))_&]:block p-6 text-center text-xs text-zinc-500 dark:text-zinc-400"
+    >
+      No results found
+    </p>
+    <p
+      class="cp-status hidden [&:not(:empty)]:block p-2.5 text-center text-xs text-zinc-500 dark:text-zinc-400 border-t border-zinc-100 dark:border-zinc-800"
+      role="status"
+      aria-live="polite"
+    >
+    </p>
+  </div>
+</dialog>
+
+<script>
+  import { search, preloadPagefind, type SearchResult } from "@/utils/pagefind";
+
+  function initCommandPalette() {
+    const dialogEl =
+      document.querySelector<HTMLDialogElement>("#command-palette");
+    if (!dialogEl || dialogEl.dataset.cpReady) return;
+    dialogEl.dataset.cpReady = "true";
+    const dialog: HTMLDialogElement = dialogEl;
+
+    const input = dialog.querySelector<HTMLInputElement>(".cp-input")!;
+    const list = dialog.querySelector<HTMLUListElement>("#cp-listbox")!;
+    const resultsList =
+      dialog.querySelector<HTMLUListElement>("#cp-results-list")!;
+    const status = dialog.querySelector<HTMLParagraphElement>(".cp-status")!;
+
+    const allOptions = () => [
+      ...dialog.querySelectorAll<HTMLElement>(".cp-option"),
+    ];
+    const visibleOptions = () => allOptions().filter((o) => !o.hidden);
+
+    function setActive(el: HTMLElement | null) {
+      allOptions().forEach((o) => delete o.dataset.active);
+      if (!el) {
+        input.removeAttribute("aria-activedescendant");
+        return;
+      }
+      el.dataset.active = "true";
+      input.setAttribute("aria-activedescendant", el.id);
+      el.scrollIntoView({ block: "nearest" });
+    }
+
+    function filterCommands(q: string) {
+      for (const o of allOptions()) {
+        if (o.classList.contains("cp-result")) continue;
+        const hay =
+          `${o.textContent ?? ""} ${o.dataset.keywords ?? ""}`.toLowerCase();
+        o.hidden = q !== "" && !hay.includes(q);
+      }
+    }
+
+    function escapeHtml(s: string) {
+      return s.replace(
+        /[&<>"']/g,
+        (c) =>
+          ({
+            "&": "&amp;",
+            "<": "&lt;",
+            ">": "&gt;",
+            '"': "&quot;",
+            "'": "&#39;",
+          })[c] as string,
+      );
+    }
+
+    function resultRow(r: SearchResult, i: number) {
+      return `<li>
+        <a id="cp-result-${i}" role="option" class="cp-option cp-result block p-2.5 rounded-lg border-t border-zinc-100 dark:border-zinc-800/60 hover:bg-zinc-100 dark:hover:bg-zinc-800/80 data-[active=true]:bg-zinc-900 dark:data-[active=true]:bg-zinc-100 data-[active=true]:text-white dark:data-[active=true]:text-zinc-900 cursor-pointer group" href="${r.url}" tabindex="-1">
+          <div class="flex items-baseline justify-between gap-2">
+            <span class="font-semibold text-sm text-foreground dark:group-data-[active=true]:text-zinc-900 group-data-[active=true]:text-white">${escapeHtml(r.title)}</span>
+            <span class="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 group-data-[active=true]:text-inherit">${escapeHtml(r.type)}</span>
+          </div>
+          <span class="block mt-1 text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 leading-snug group-data-[active=true]:text-inherit [&_mark]:bg-amber-200 dark:[&_mark]:bg-amber-900/80 [&_mark]:text-inherit [&_mark]:font-bold">${r.excerpt}</span>
+        </a>
+      </li>`;
+    }
+
+    function renderResults(results: SearchResult[]) {
+      resultsList.innerHTML = results.map(resultRow).join("");
+    }
+
+    let searchToken = 0;
+    async function runSearch(query: string) {
+      const token = ++searchToken;
+      const outcome = await search(query, { limit: 6 });
+      if (token !== searchToken || outcome.status === "superseded") return;
+      if (outcome.status === "unavailable") {
+        resultsList.innerHTML = "";
+        status.textContent = "Search is unavailable right now.";
+        return;
+      }
+      renderResults(outcome.results);
+      status.textContent =
+        outcome.total > 0
+          ? `${outcome.total} result${outcome.total === 1 ? "" : "s"}`
+          : "";
+      setActive(visibleOptions()[0] ?? null);
+    }
+
+    function onInput() {
+      const query = input.value.trim();
+      filterCommands(query.toLowerCase());
+      runSearch(query);
+      setActive(visibleOptions()[0] ?? null);
+    }
+
+    function reset() {
+      input.value = "";
+      resultsList.innerHTML = "";
+      status.textContent = "";
+      filterCommands("");
+      setActive(visibleOptions()[0] ?? null);
+    }
+
+    dialog.addEventListener("close", reset);
+    input.addEventListener("input", onInput);
+
+    input.addEventListener("keydown", (e) => {
+      const opts = visibleOptions();
+      if (!opts.length) return;
+      const i = opts.findIndex((o) => o.dataset.active === "true");
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setActive(opts[(i + 1) % opts.length]);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setActive(opts[(i - 1 + opts.length) % opts.length]);
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        opts[i >= 0 ? i : 0]?.click();
+      }
+    });
+
+    list.addEventListener("click", (e) => {
+      const opt = (e.target as HTMLElement).closest<HTMLElement>(".cp-option");
+      if (!opt?.dataset.action) return;
+      e.preventDefault();
+      if (opt.dataset.action === "copy-url") {
+        navigator.clipboard?.writeText(location.href);
+      }
+      dialog.close();
+    });
+
+    input.addEventListener("focus", () => preloadPagefind(), { once: true });
+    reset();
+  }
+
+  initCommandPalette();
+  document.addEventListener("astro:page-load", initCommandPalette);
+</script>

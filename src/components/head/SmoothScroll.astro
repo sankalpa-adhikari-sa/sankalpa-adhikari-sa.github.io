@@ -1,0 +1,34 @@
+---
+
+---
+
+<script>
+  import Lenis from "lenis";
+  import { gsap, ScrollTrigger } from "@/utils/gsap-init";
+
+  let lenis: Lenis | null = null;
+
+  function lenisScroll() {
+    lenis = new Lenis();
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add((time) => {
+      lenis!.raf(time * 700);
+    });
+    gsap.ticker.lagSmoothing(0);
+  }
+
+  function cleanup() {
+    ScrollTrigger.getAll().forEach((t) => t.kill());
+    if (lenis) {
+      lenis.destroy();
+      lenis = null;
+    }
+    gsap.ticker.remove((time) => {
+      lenis?.raf(time * 700);
+    });
+  }
+
+  lenisScroll();
+  document.addEventListener("astro:before-swap", cleanup);
+  document.addEventListener("astro:after-swap", lenisScroll);
+</script>

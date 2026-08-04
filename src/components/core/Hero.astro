@@ -1,0 +1,304 @@
+---
+import { Image } from "astro:assets";
+import { getConfig } from "@/config/config";
+
+const imageModules = import.meta.glob<{ default: ImageMetadata }>(
+  "/src/assets/hero/*.{jpeg,jpg,png,gif,webp}",
+);
+const images = await Promise.all(
+  Object.values(imageModules).map((img) => img()),
+);
+
+const config = getConfig();
+
+const githubProfile = config.socialProfiles.find(
+  (profile) => profile.name.toLowerCase() === "github",
+);
+const githubUrl = githubProfile
+  ? githubProfile.url.startsWith("http")
+    ? githubProfile.url
+    : `https://${githubProfile.url}`
+  : "https://github.com";
+
+const name = "Sankalpa Adhikari";
+const roles = ["Fullstack Software Engineer", "Agricultural Engineer"];
+---
+
+<section
+  id="hero-section"
+  class="relative h-screen w-full overflow-hidden flex items-center justify-center bg-background select-none"
+>
+  <div
+    data-hero-content
+    class="relative z-10 flex flex-col items-center justify-center text-center px-4 max-w-2xl"
+  >
+    <div data-hero-item class="mb-5 flex items-center gap-2.5">
+      <span class="relative flex h-2.5 w-2.5">
+        <span
+          class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75 dark:bg-green-500"
+        ></span>
+        <span
+          class="relative inline-flex h-2.5 w-2.5 rounded-full bg-green-500 dark:bg-green-400"
+        ></span>
+      </span>
+      <span
+        class="font-mono text-xs uppercase tracking-[0.25em] text-muted-foreground"
+      >
+        Available for work
+      </span>
+    </div>
+
+    <h1
+      data-hero-item
+      class="text-5xl md:text-7xl font-bold text-foreground mb-4 pointer-events-none tracking-tight"
+    >
+      {name}
+    </h1>
+
+    <h2
+      data-hero-item
+      aria-label={roles.join(" and ")}
+      class="mb-6 flex flex-wrap items-center justify-center gap-x-3 gap-y-2 pointer-events-none"
+    >
+      {
+        roles.map((r, i) => (
+          <>
+            {i > 0 && (
+              <span
+                aria-hidden="true"
+                class="flex text-2xl shrink-0 items-center justify-center font-mono text-foreground/70 "
+              >
+                +
+              </span>
+            )}
+            <span
+              aria-hidden="true"
+              class="text-xl md:text-3xl font-medium text-foreground/70"
+            >
+              {r}
+            </span>
+          </>
+        ))
+      }
+    </h2>
+
+    <p
+      data-hero-item
+      class="text-lg text-muted-foreground mb-10 max-w-xl pointer-events-none leading-relaxed"
+    >
+      I build full-stack products - React/Next.js frontends, Python/Node
+      backends, deployed on AWS.
+    </p>
+
+    <div data-hero-item class="flex gap-4 pointer-events-auto">
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        data-hero-cta
+        class="flex items-center justify-center gap-2 rounded-md p-4 font-mono text-sm uppercase transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+      >
+        View on GitHub
+      </a>
+      <a
+        href={`mailto:${config.author.contactEmail}`}
+        data-hero-cta
+        class="flex items-center justify-center gap-2 rounded-md p-4 font-mono text-sm uppercase transition-colors border border-border bg-secondary text-secondary-foreground hover:bg-secondary/80"
+      >
+        Contact Me
+      </a>
+    </div>
+  </div>
+
+  <div
+    data-scroll-cue
+    class="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-2 pointer-events-none"
+  >
+    <span
+      class="font-mono text-[11px] uppercase tracking-[0.3em] text-muted-foreground"
+    >
+      Scroll
+    </span>
+    <span data-scroll-line class="block h-8 w-px bg-border origin-top"></span>
+  </div>
+
+  <div
+    class="pointer-events-none absolute inset-0 overflow-hidden"
+    aria-hidden="true"
+  >
+    {
+      images.map((img) => (
+        <Image
+          src={img.default}
+          alt=""
+          class="trail-img absolute top-0 left-0 w-36 h-48 object-contain opacity-0 pointer-events-none -translate-x-1/2 -translate-y-1/2 will-change-transform"
+        />
+      ))
+    }
+  </div>
+</section>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+  import { audio } from "@/utils/audio";
+
+  let ctx: gsap.Context | undefined;
+  let cleanup: (() => void) | undefined;
+
+  function initHeroAnimation() {
+    ctx?.revert();
+    cleanup?.();
+
+    const hero = document.getElementById("hero-section");
+    if (!hero) return;
+
+    const trailImages = gsap.utils.toArray<HTMLElement>(".trail-img");
+
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    ctx = gsap.context(() => {
+      const items = gsap.utils.toArray<HTMLElement>("[data-hero-item]");
+      const ctas = gsap.utils.toArray<HTMLElement>("[data-hero-cta]");
+      const scrollCue = hero.querySelector<HTMLElement>("[data-scroll-cue]");
+      const scrollLine = hero.querySelector<HTMLElement>("[data-scroll-line]");
+
+      const onCtaHover = () => audio.play("pop");
+      ctas.forEach((cta) => cta.addEventListener("mouseenter", onCtaHover));
+
+      if (prefersReducedMotion) {
+        gsap.set(items, { opacity: 1 });
+        gsap.set(scrollCue, { opacity: 1 });
+        cleanup = () => {
+          ctas.forEach((cta) =>
+            cta.removeEventListener("mouseenter", onCtaHover),
+          );
+        };
+        return;
+      }
+
+      const entrance = gsap.timeline({ delay: 0.15 });
+      entrance
+        .fromTo(
+          items,
+          { y: 24, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.7,
+            ease: "power3.out",
+            stagger: 0.12,
+          },
+        )
+        .fromTo(
+          scrollCue,
+          { opacity: 0 },
+          { opacity: 1, duration: 0.6, ease: "power2.out" },
+          "-=0.3",
+        );
+
+      if (scrollLine) {
+        gsap.to(scrollLine, {
+          scaleY: 0.35,
+          opacity: 0.35,
+          duration: 1.1,
+          ease: "power1.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
+      }
+
+      cleanup = () => {
+        ctas.forEach((cta) =>
+          cta.removeEventListener("mouseenter", onCtaHover),
+        );
+      };
+
+      if (trailImages.length === 0) return;
+
+      let lastPos: { x: number; y: number } | null = null;
+      let currentIndex = 0;
+      let zCounter = 1;
+      const distanceThreshold = 60;
+
+      const handlePointerMove = (e: PointerEvent) => {
+        if (e.pointerType === "touch") return;
+
+        const curr = { x: e.clientX, y: e.clientY };
+
+        if (!lastPos) {
+          lastPos = curr;
+          return;
+        }
+
+        const dx = curr.x - lastPos.x;
+        const dy = curr.y - lastPos.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance > distanceThreshold) {
+          const img = trailImages[currentIndex];
+          currentIndex = (currentIndex + 1) % trailImages.length;
+
+          const rect = hero.getBoundingClientRect();
+          const posX = e.clientX - rect.left;
+          const posY = e.clientY - rect.top;
+
+          gsap.killTweensOf(img);
+
+          gsap.set(img, {
+            left: posX,
+            top: posY,
+            x: 0,
+            y: 0,
+            scale: 0,
+            opacity: 1,
+            rotation: gsap.utils.random(-15, 15),
+            zIndex: zCounter++,
+          });
+
+          const tl = gsap.timeline();
+          tl.to(img, {
+            scale: gsap.utils.random(0.9, 1.1),
+            ease: "back.out(1.7)",
+            duration: 0.6,
+          });
+          tl.to(
+            img,
+            {
+              x: dx * 4,
+              y: dy * 4,
+              rotation: gsap.utils.random(-50, 50),
+              ease: "power4.out",
+              duration: 1.5,
+            },
+            "<",
+          );
+          tl.to(img, {
+            scale: 0,
+            opacity: 0,
+            duration: 0.35,
+            delay: 0.1,
+            ease: "back.in(1.5)",
+          });
+
+          lastPos = curr;
+        }
+      };
+
+      hero.addEventListener("pointermove", handlePointerMove);
+
+      const removeCleanup = cleanup;
+      cleanup = () => {
+        removeCleanup?.();
+        hero.removeEventListener("pointermove", handlePointerMove);
+      };
+    });
+  }
+
+  document.addEventListener("astro:page-load", initHeroAnimation);
+  document.addEventListener("astro:before-swap", () => {
+    ctx?.revert();
+    cleanup?.();
+  });
+</script>

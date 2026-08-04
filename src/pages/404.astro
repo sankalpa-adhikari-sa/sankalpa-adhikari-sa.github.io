@@ -1,0 +1,86 @@
+---
+import PageLayout from "@/layouts/core/PageLayout.astro";
+---
+
+<PageLayout
+  title="404: Not Found"
+  description="Page Not Found"
+  dataPagefindIgnore="all"
+>
+  <main class="min-h-screen w-full flex flex-col justify-center items-center">
+    <div class="text-center p-8">
+      <h1
+        class="text-8xl sm:text-9xl font-bold tracking-tighter text-tertiary"
+        aria-label="404 Error"
+      >
+        <span class="digit inline-block">4</span>
+        <span class="digit inline-block">0</span>
+        <span class="digit inline-block">4</span>
+      </h1>
+
+      <h2
+        class="fade-in mt-4 text-2xl sm:text-3xl font-semibold text-tertiary/80"
+      >
+        Page Not Found
+      </h2>
+      <p class="fade-in mt-2 text-foreground/60">
+        Sorry, the page you are looking for seems to have taken a wrong turn.
+      </p>
+
+      <div class="fade-in mt-8">
+        <a
+          href="/"
+          class="flex flex-1 items-center justify-center gap-2 rounded-md p-4 font-mono text-sm uppercase transition-colors bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          Go Back Home
+        </a>
+      </div>
+    </div>
+  </main>
+</PageLayout>
+
+<style>
+  .digit,
+  .fade-in {
+    visibility: hidden;
+  }
+</style>
+<script>
+  import { gsap } from "@/utils/gsap-init";
+
+  let ctx: gsap.Context | undefined;
+  function init404Page() {
+    ctx = gsap.context(() => {
+      const tl = gsap.timeline();
+
+      gsap.set(".digit", { y: 50 });
+      gsap.set(".fade-in", { y: 20 });
+
+      tl.to(
+        ".digit",
+        {
+          y: 0,
+          autoAlpha: 1,
+          duration: 0.8,
+          ease: "back.out(1.7)",
+          stagger: 0.2,
+        },
+        "+=0.2",
+      );
+
+      tl.to(
+        ".fade-in",
+        {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.6,
+          ease: "power3.out",
+          stagger: 0.15,
+        },
+        "-=0.5",
+      );
+    });
+  }
+  document.addEventListener("astro:page-load", init404Page);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>

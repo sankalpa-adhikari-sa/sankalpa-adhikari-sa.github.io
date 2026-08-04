@@ -1,0 +1,115 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import type { MarkdownHeading } from "astro";
+import { Icon } from "astro-icon/components";
+import authorImage from "@/assets/author.png";
+import FormattedDate from "@/components/FormattedDate.astro";
+import MobileTableOfContents from "../toc/MobileTableOfContents.astro";
+import TableOfContents from "../toc/TableOfContents.astro";
+import PageLayout from "./PageLayout.astro";
+
+type Props = {
+  data: CollectionEntry<"articles">["data"];
+  headings: MarkdownHeading[];
+  readingTime: string;
+};
+
+const { data, headings, readingTime } = Astro.props;
+const {
+  title,
+  subtitle,
+  tags,
+  description = "",
+  toc,
+  cover,
+  coverAlt,
+  pubDate,
+  lastUpdated,
+} = data;
+---
+
+<PageLayout title={title} description={description}>
+  <article
+    class="mx-auto my-[calc(var(--header-height)+50px)] min-[1280px]:my-(--header-height) max-w-7xl items-start gap-12 min-[1280px]:grid min-[1280px]:grid-cols-[minmax(0,1fr)_18rem]"
+  >
+    <div class="min-w-0">
+      {toc && <MobileTableOfContents headings={headings} />}
+      <div class="typeset typeset-docs max-w-6xl">
+        <div class="flex flex-wrap flex-col justify-between mt-8 xl:mt-1 gap-2">
+          <div class="flex flex-col gap-2">
+            <h1 class="lg:text-5xl lg:leading-tight mt-4 font-medium">
+              {title}
+            </h1>
+            {subtitle && <span>{subtitle}</span>}
+          </div>
+          <div
+            class="flex flex-row items-center justify-between text-sm text-muted-foreground"
+          >
+            <div class="flex items-center gap-2">
+              <Image
+                src={authorImage}
+                alt="Sankalpa Adhikari"
+                width={32}
+                height={32}
+                class="h-8 w-8 rounded-full object-cover border border-border mt-0"
+              />
+              <span class="text-foreground">Sankalpa Adhikari</span>
+            </div>
+            <div class="flex flex-row flex-wrap items-center gap-3">
+              <span class="flex flex-row items-center gap-2">
+                <Icon
+                  name={"heroicons:calendar-date-range"}
+                  class={"size-3.5"}
+                />
+                <FormattedDate date={pubDate} />
+              </span>
+              {
+                lastUpdated && (
+                  <span class="flex flex-row items-center gap-2">
+                    <Icon
+                      name={"heroicons:arrows-up-down"}
+                      class={"size-3.5"}
+                    />
+                    <FormattedDate date={lastUpdated} />
+                  </span>
+                )
+              }
+              <span>
+                {readingTime}
+              </span>
+            </div>
+          </div>
+          {
+            tags && tags.length > 0 && (
+              <div class="flex flex-wrap items-center gap-2 mt-3">
+                {tags.map((tag) => (
+                  <span class="rounded-full bg-tertiary px-2.5 py-1 font-mono text-xs uppercase tracking-wide text-tertiary-foreground">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )
+          }
+        </div>
+        {
+          cover && (
+            <div>
+              <Image
+                fit="cover"
+                src={cover}
+                loading="eager"
+                decoding="async"
+                alt={coverAlt || title}
+                class={"rounded-2xl"}
+              />
+            </div>
+          )
+        }
+        <slot />
+      </div>
+    </div>
+
+    {toc && <TableOfContents headings={headings} />}
+  </article>
+</PageLayout>
