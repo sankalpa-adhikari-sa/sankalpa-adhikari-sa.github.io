@@ -1,0 +1,27 @@
+---
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+
+export async function getStaticPaths() {
+  const componentFiles = import.meta.glob(
+    "../../../../components/gsap/*.astro",
+  );
+  console.log("HELLO+++++++", componentFiles);
+
+  return Object.entries(componentFiles).map(([path, resolver]) => {
+    const fileName = path.split("/").pop()?.replace(".astro", "") || "";
+    const slug = fileName.toLowerCase();
+
+    return {
+      params: { component: slug },
+      props: { resolver },
+    };
+  });
+}
+
+const { resolver } = Astro.props;
+const { default: DynamicComponent } = (await resolver()) as any;
+---
+
+<PageLayout title="" description="">
+  <DynamicComponent />
+</PageLayout>

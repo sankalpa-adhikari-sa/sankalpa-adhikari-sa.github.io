@@ -1,0 +1,33 @@
+---
+import { ClientRouter } from "astro:transitions";
+import "@/styles/global.css";
+import { Font } from "astro:assets";
+import type { ImageMetadata } from "astro";
+
+import CoreMeta from "@/components/head/CoreMeta.astro";
+import SmoothScroll from "@/components/head/SmoothScroll.astro";
+import ThemeScript from "@/components/head/ThemeScript.astro";
+
+interface Props {
+  title: string;
+  description: string;
+  image?: ImageMetadata;
+  dataPagefindIgnore?: "index" | "all";
+}
+
+const { title, description, image, dataPagefindIgnore } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <ClientRouter />
+    <CoreMeta title={title} description={description} image={image} />
+    <Font cssVariable="--font-suisse" preload />
+    <Font cssVariable="--font-sometype" preload />
+    <ThemeScript />
+    <SmoothScroll />
+  </head>
+  <body data-pagefind-ignore={dataPagefindIgnore}>
+    <slot />
+  </body>
+</html>

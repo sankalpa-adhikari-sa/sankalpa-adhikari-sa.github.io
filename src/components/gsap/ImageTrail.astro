@@ -1,0 +1,370 @@
+---
+const testImages = [
+  "https://picsum.photos/id/1018/300/200",
+  "https://picsum.photos/id/1025/300/200",
+  "https://picsum.photos/id/1035/300/200",
+  "https://picsum.photos/id/1069/300/200",
+  "https://picsum.photos/id/1074/300/200",
+];
+---
+
+<div
+  class="image-trail-wrapper"
+  data-anm-image-trail
+  data-anm-movement-threshold="40"
+  data-anm-delay-between="20"
+  data-anm-image-width="160"
+  data-anm-image-height="120"
+  data-anm-rotation-enabled="true"
+>
+  <div class="instructions">
+    <h2>Move your mouse around this box</h2>
+    <p>Image trail effect test sandbox</p>
+  </div>
+
+  <div class="image_trail_container"></div>
+
+  <div class="image_trail_gallery" style="display: none;">
+    {
+      testImages.map((src, index) => (
+        <img src={src} alt={`Sample ${index + 1}`} />
+      ))
+    }
+  </div>
+</div>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+
+  type CleanupFunction = () => void;
+  interface TrailOptions {
+    movementThreshold: number;
+    delayBetween: number;
+    imageWidth: number;
+    imageHeight: number;
+    // True when data-anm-image-height was explicitly set: the height is then
+    // used as a fixed value instead of being derived from the image's
+    // aspect ratio.
+    explicitHeight: boolean;
+    entranceDuration: number;
+    exitDuration: number;
+    exitDelay: number;
+    rotationEnabled: boolean;
+    rotationRange: [number, number];
+    entranceEase: string;
+    exitEase: string;
+    maxActiveImages: number;
+  }
+
+  const TRAIL_SELECTOR = "[data-anm-image-trail]";
+
+  // Only movementThreshold, delayBetween, imageWidth, imageHeight,
+  // rotationEnabled and rotationRange are exposed via data-anm-* attributes.
+  // The remaining fields below are intentionally fixed per-deployment;
+  // expose them the same way if per-instance control is ever needed.
+  const DEFAULT_OPTIONS: TrailOptions = {
+    movementThreshold: 50,
+    delayBetween: 30,
+    imageWidth: 180,
+    imageHeight: 150,
+    explicitHeight: false,
+    entranceDuration: 0.5,
+    exitDuration: 0.5,
+    exitDelay: 0.5,
+    rotationEnabled: true,
+    rotationRange: [-20, 20],
+    entranceEase: "back.out(2)",
+    exitEase: "power2.in",
+    maxActiveImages: 50,
+  };
+
+  let activeCleanupFunctions: CleanupFunction[] = [];
+
+  function isTouchDevice() {
+    return (
+      "ontouchstart" in window ||
+      navigator.maxTouchPoints > 0 ||
+      window.matchMedia("(hover: none)").matches
+    );
+  }
+
+  // parseFloat(...) || fallback silently discards a legitimate 0 (e.g.
+  // data-anm-delay-between="0"). This treats only a missing/unparsable
+  // value as "use the fallback".
+  function parseNumericAttr(
+    value: string | undefined,
+    fallback: number,
+  ): number {
+    if (value === undefined) return fallback;
+    const parsed = parseFloat(value);
+    return Number.isNaN(parsed) ? fallback : parsed;
+  }
+
+  function waitForImages(imgs: HTMLImageElement[]): Promise<void> {
+    return Promise.all(
+      imgs.map((img) => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return new Promise<void>((resolve) => {
+          img.addEventListener("load", () => resolve(), { once: true });
+          img.addEventListener("error", () => resolve(), { once: true });
+        });
+      }),
+    ).then(() => undefined);
+  }
+
+  function createImageTrail(container: HTMLElement): CleanupFunction {
+    if (isTouchDevice()) return () => {};
+
+    // Guard against double-initialization (e.g. astro:page-load firing
+    // twice without an intervening astro:before-swap), which would
+    // otherwise attach a second mousemove listener to the same container.
+    if (container.dataset.anmInitialized === "true") return () => {};
+    container.dataset.anmInitialized = "true";
+
+    const trailContainer = container.querySelector<HTMLDivElement>(
+      ".image_trail_container",
+    );
+    const galleryContainer = container.querySelector<HTMLDivElement>(
+      ".image_trail_gallery",
+    );
+
+    if (!trailContainer || !galleryContainer) {
+      container.dataset.anmInitialized = "false";
+      return () => {};
+    }
+
+    const images = Array.from(
+      galleryContainer.querySelectorAll<HTMLImageElement>("img"),
+    );
+    if (images.length === 0) {
+      container.dataset.anmInitialized = "false";
+      return () => {};
+    }
+
+    let rotationRange = DEFAULT_OPTIONS.rotationRange;
+    const rawRotationRange = container.dataset.anmRotationRange;
+    if (rawRotationRange) {
+      try {
+        const parsed = JSON.parse(rawRotationRange);
+        if (
+          Array.isArray(parsed) &&
+          parsed.length === 2 &&
+          typeof parsed[0] === "number" &&
+          typeof parsed[1] === "number"
+        ) {
+          rotationRange = parsed as [number, number];
+        } else {
+          console.warn(
+            "data-anm-rotation-range must be a [number, number] tuple",
+          );
+        }
+      } catch (error) {
+        console.warn("Invalid JSON in data-anm-rotation-range", error);
+      }
+    }
+
+    const options: TrailOptions = {
+      ...DEFAULT_OPTIONS,
+      movementThreshold: parseNumericAttr(
+        container.dataset.anmMovementThreshold,
+        DEFAULT_OPTIONS.movementThreshold,
+      ),
+      delayBetween: parseNumericAttr(
+        container.dataset.anmDelayBetween,
+        DEFAULT_OPTIONS.delayBetween,
+      ),
+      imageWidth: parseNumericAttr(
+        container.dataset.anmImageWidth,
+        DEFAULT_OPTIONS.imageWidth,
+      ),
+      imageHeight: parseNumericAttr(
+        container.dataset.anmImageHeight,
+        DEFAULT_OPTIONS.imageHeight,
+      ),
+      explicitHeight: container.dataset.anmImageHeight !== undefined,
+      rotationEnabled: container.dataset.anmRotationEnabled !== "false",
+      rotationRange,
+    };
+
+    let currentImageIndex = 0;
+    // null until the first real mousemove, so the very first event can't
+    // spawn an image purely because (0,0) is far from the cursor.
+    let lastMousePosition: { x: number; y: number } | null = null;
+    let lastImageTimestamp = performance.now();
+    const activeTrails = new Set<HTMLImageElement>();
+    let isCancelled = false;
+    let isListenerAttached = false;
+
+    function handleMouseMove(event: MouseEvent) {
+      if (lastMousePosition === null) {
+        lastMousePosition = { x: event.clientX, y: event.clientY };
+        lastImageTimestamp = performance.now();
+        return;
+      }
+
+      //   Distance < threshold
+      //   sqrt((x2-x1)^2 + (y2-y1)^2) < threshold
+      // squaring both sides
+      // (x2-x1)^2 + (y2-y1)^2 < threshold * threshold
+      const deltaX = event.clientX - lastMousePosition.x;
+      const deltaY = event.clientY - lastMousePosition.y;
+      const distanceMoved = deltaX * deltaX + deltaY * deltaY;
+
+      if (distanceMoved < options.movementThreshold * options.movementThreshold)
+        return;
+
+      const now = performance.now();
+      if (now - lastImageTimestamp < options.delayBetween) return;
+
+      if (activeTrails.size >= options.maxActiveImages) {
+        const oldestImage = activeTrails.values().next().value;
+        if (oldestImage) {
+          gsap.killTweensOf(oldestImage);
+          oldestImage.remove();
+          activeTrails.delete(oldestImage);
+        }
+      }
+
+      const sourceImage = images[currentImageIndex];
+      const clonedImage = sourceImage.cloneNode(true) as HTMLImageElement;
+      clonedImage.classList.add("image_trail_item");
+      // Purely decorative, rapidly mounted/unmounted — keep it out of the
+      // accessibility tree.
+      clonedImage.setAttribute("aria-hidden", "true");
+      clonedImage.alt = "";
+
+      currentImageIndex = (currentImageIndex + 1) % images.length;
+
+      const width = options.imageWidth;
+      let height: number;
+      if (options.explicitHeight) {
+        height = options.imageHeight;
+      } else {
+        const aspectRatio =
+          (sourceImage.naturalWidth || options.imageWidth) /
+          (sourceImage.naturalHeight || options.imageHeight);
+        height = width / aspectRatio;
+      }
+
+      clonedImage.style.width = `${width}px`;
+      clonedImage.style.height = `${height}px`;
+      clonedImage.style.left = `${event.clientX - width / 2}px`;
+      clonedImage.style.top = `${event.clientY - height / 2}px`;
+
+      trailContainer?.appendChild(clonedImage);
+      activeTrails.add(clonedImage);
+
+      const rotationAngle = options.rotationEnabled
+        ? gsap.utils.random(options.rotationRange[0], options.rotationRange[1])
+        : 0;
+
+      gsap.fromTo(
+        clonedImage,
+        { scale: 0, rotation: rotationAngle },
+        {
+          scale: 1,
+          duration: options.entranceDuration,
+          ease: options.entranceEase,
+          force3D: true,
+        },
+      );
+
+      gsap.to(clonedImage, {
+        scale: 0,
+        duration: options.exitDuration,
+        delay: options.exitDelay,
+        ease: options.exitEase,
+        onComplete: () => {
+          clonedImage.remove();
+          activeTrails.delete(clonedImage);
+        },
+      });
+
+      lastMousePosition = { x: event.clientX, y: event.clientY };
+      lastImageTimestamp = now;
+    }
+
+    // Wait for gallery images to finish loading before wiring up the
+    // listener, so the first trail images use real aspect ratios instead
+    // of the imageWidth/imageHeight fallback.
+    waitForImages(images).then(() => {
+      if (isCancelled) return;
+      container.addEventListener("mousemove", handleMouseMove);
+      isListenerAttached = true;
+    });
+
+    return function cleanup() {
+      isCancelled = true;
+      container.dataset.anmInitialized = "false";
+      if (isListenerAttached) {
+        container.removeEventListener("mousemove", handleMouseMove);
+      }
+      activeTrails.forEach((image) => {
+        gsap.killTweensOf(image);
+        image.remove();
+      });
+      activeTrails.clear();
+    };
+  }
+
+  function initializeAllTrails() {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const trailElements =
+      document.querySelectorAll<HTMLElement>(TRAIL_SELECTOR);
+
+    trailElements.forEach((element) => {
+      const cleanup = createImageTrail(element);
+      if (cleanup) activeCleanupFunctions.push(cleanup);
+    });
+  }
+
+  function cleanupAllTrails() {
+    activeCleanupFunctions.forEach((fn) => fn());
+    activeCleanupFunctions = [];
+  }
+
+  document.addEventListener("astro:before-swap", cleanupAllTrails);
+
+  document.addEventListener("astro:page-load", initializeAllTrails);
+</script>
+<style is:global>
+  .image-trail-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 80vh;
+    background-color: #121212;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    user-select: none;
+    cursor: crosshair;
+  }
+
+  .instructions {
+    text-align: center;
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .image_trail_container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .image_trail_item {
+    position: fixed;
+    pointer-events: none;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    will-change: transform, opacity;
+  }
+</style>
