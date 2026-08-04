@@ -17,6 +17,7 @@ import { pagefind } from "@/lib/pagefind-integration.mjs";
 import { satteriMermaid } from "@/lib/satteri-mermaid.mjs";
 import { satteriReadingTime } from "@/lib/satteri-reading-time.mjs";
 import { satteriTreeBlock } from "@/lib/satteri-tree-block.mjs";
+import { redirects } from '@/config/redirects.ts'
 
 // https://astro.build/config
 export default defineConfig({
@@ -90,4 +91,5 @@ export default defineConfig({
 			},
 		},
 	],
+	redirects
 });
