@@ -87,6 +87,9 @@ const testImages = [
       window.matchMedia("(hover: none)").matches
     );
   }
+  function supportsMouseHover() {
+    return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  }
 
   // parseFloat(...) || fallback silently discards a legitimate 0 (e.g.
   // data-anm-delay-between="0"). This treats only a missing/unparsable
@@ -113,7 +116,9 @@ const testImages = [
   }
 
   function createImageTrail(container: HTMLElement): CleanupFunction {
-    if (isTouchDevice()) return () => {};
+    if (!supportsMouseHover()) {
+      return () => {};
+    }
 
     // Guard against double-initialization (e.g. astro:page-load firing
     // twice without an intervening astro:before-swap), which would

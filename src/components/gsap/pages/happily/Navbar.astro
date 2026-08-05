@@ -1,0 +1,49 @@
+---
+import { Icon } from "astro-icon/components";
+import "./styles.css";
+---
+
+<header class="header" data-color="light">
+  <div class="announcement-ribbon">
+    <div class="announcement-ribbon-items">
+      <p class="announcement-item">use code "FIRSTORDER" for free shipping</p>
+      <p class="announcement-item">bundle & save up to 20%</p>
+    </div>
+  </div>
+  <div class="nav-wrapper">
+    <nav class="nav-container">
+      <ul class="nav-items">
+        <li class="nav-items-li">
+          <a target="_self" class="nav-items-link" aria-label="shop">
+            <span>shop</span>
+            <Icon name={"heroicons:chevron-down"} />
+          </a>
+        </li>
+        <li class="nav-items-li">
+          <a target="_self" class="nav-items-link" aria-label="explore">
+            <span>explore</span>
+            <Icon name={"heroicons:chevron-down"} />
+          </a>
+        </li>
+        <li class="nav-items-li">
+          <a target="_self" class="nav-items-link" aria-label="subscribe">
+            <span>subscribe</span>
+          </a>
+        </li>
+      </ul>
+      <div class="nav-dropdown"></div>
+    </nav>
+    <div class="nav-actions">
+      <a>
+        <Icon name={"heroicons:user"} />
+      </a>
+      <button>
+        <Icon name={"heroicons:shopping-bag"} />
+      </button>
+      <button>
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+      </button>
+    </div>
+  </div>
+</header>

@@ -1,0 +1,25 @@
+---
+export async function getStaticPaths() {
+  const componentFiles = import.meta.glob(
+    "../../../../components/gsap/pages/*/index.astro",
+  );
+
+  return Object.entries(componentFiles).map(([path, resolver]) => {
+    const slug = path.split("/").at(-2)!;
+
+    return {
+      params: {
+        page: slug,
+      },
+      props: {
+        resolver,
+      },
+    };
+  });
+}
+
+const { resolver } = Astro.props;
+const { default: DynamicPage } = await resolver();
+---
+
+<DynamicPage />

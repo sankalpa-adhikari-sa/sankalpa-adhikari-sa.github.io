@@ -1,0 +1,31 @@
+---
+import Navbar from "./Navbar.astro";
+import "./styles.css";
+import { ButtonWave, ButtonWaveText } from "./components/button";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Demo</title>
+  </head>
+  <body class="reset" data-color="light">
+    <Navbar />
+    <ButtonWaveText theme="auto" wave="blueberry" ariaLabel="view more">
+      Shop now
+    </ButtonWaveText>
+    <ButtonWave
+      wave="blueberry"
+      theme="auto"
+      ariaLabel="view more"
+      icon="heroicons:shopping-bag"
+      style={{
+        minWidth: "16rem",
+      }}
+    >
+      View Mores
+    </ButtonWave>
+  </body>
+</html>

@@ -3,7 +3,7 @@ import PageLayout from "@/layouts/sandbox/PageLayout.astro";
 
 export async function getStaticPaths() {
   const componentFiles = import.meta.glob(
-    "../../../../components/gsap/*.astro",
+    "../../../../components/gsap/components*.astro",
   );
   console.log("HELLO+++++++", componentFiles);
 
