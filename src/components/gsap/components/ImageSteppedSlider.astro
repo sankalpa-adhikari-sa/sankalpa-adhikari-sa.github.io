@@ -8,11 +8,11 @@ export interface SliderItem {
 }
 
 export interface Props {
-  items?: SliderItem[];
+  displayItems?: SliderItem[];
 }
 
 const {
-  items = [
+  displayItems = [
     {
       type: "project",
       slug: "lamer",
@@ -71,8 +71,6 @@ const {
     },
   ],
 } = Astro.props;
-
-const displayItems = [...items, ...items, ...items];
 ---
 
 <div class="home">
@@ -281,6 +279,8 @@ const displayItems = [...items, ...items, ...items];
   import { gsap } from "@/utils/gsap-init";
 
   class SteppedSlider extends HTMLElement {
+    private originalItems: HTMLElement[] = [];
+    private createdClones: HTMLElement[] = [];
     private items: HTMLElement[] = [];
     private isMobile = false;
 
@@ -314,14 +314,14 @@ const displayItems = [...items, ...items, ...items];
     }
 
     connectedCallback() {
-      this.items = gsap.utils.toArray<HTMLElement>(
+      this.originalItems = gsap.utils.toArray<HTMLElement>(
         ".project_item, .artist_item",
         this,
       );
-      if (!this.items.length) return;
+      if (!this.originalItems.length) return;
 
       this.updateResponsiveConfig();
-      this.setupHoverAnimations();
+      this.fillTrack();
 
       this.resizeObserver = new ResizeObserver(() => {
         clearTimeout(this.resizeTimeout);
@@ -354,10 +354,59 @@ const displayItems = [...items, ...items, ...items];
       window.removeEventListener("wheel", this.handleWheel);
       window.removeEventListener("touchstart", this.handleTouchStart);
       window.removeEventListener("touchmove", this.handleTouchMove);
+
+      this.createdClones.forEach((clone) => clone.remove());
+      this.createdClones = [];
+    }
+
+    private fillTrack() {
+      const list = this.querySelector<HTMLElement>(".artist_list");
+      if (!list || !this.originalItems.length) return;
+
+      this.createdClones.forEach((clone) => clone.remove());
+      this.createdClones = [];
+
+      let setsNeeded = 3;
+
+      if (!this.isMobile) {
+        this.measureBaseWidth();
+        if (this.baseItemWidth > 0) {
+          const singleSetMinWidth =
+            this.originalItems.length * this.baseItemWidth * this.minScale;
+          const targetWidth = window.innerWidth * 2.5;
+          setsNeeded = Math.max(
+            3,
+            Math.ceil(targetWidth / (singleSetMinWidth || 1)) + 1,
+          );
+        }
+      }
+
+      const fragment = document.createDocumentFragment();
+      for (let i = 1; i < setsNeeded; i++) {
+        this.originalItems.forEach((item) => {
+          const clone = item.cloneNode(true) as HTMLElement;
+          clone.setAttribute("aria-hidden", "true");
+
+          delete clone.dataset.hoverBound;
+
+          fragment.appendChild(clone);
+          this.createdClones.push(clone);
+        });
+      }
+      list.appendChild(fragment);
+
+      this.items = gsap.utils.toArray<HTMLElement>(
+        ".project_item, .artist_item",
+        this,
+      );
+      this.setupHoverAnimations();
     }
 
     private setupHoverAnimations() {
       this.items.forEach((item) => {
+        if (item.dataset.hoverBound === "true") return;
+        item.dataset.hoverBound = "true";
+
         const img = item.querySelector<HTMLElement>(".media-slider-home");
         const tag = item.querySelector<HTMLElement>(".tag-home-wrap");
         const tagText = tag?.querySelector<HTMLElement>("div");
@@ -456,8 +505,6 @@ const displayItems = [...items, ...items, ...items];
         this.wheelSensitivity = 0.2;
         this.touchSensitivity = 0.3;
       }
-
-      this.measureBaseWidth();
     }
 
     private resetForNativeScroll() {
@@ -470,9 +517,13 @@ const displayItems = [...items, ...items, ...items];
       });
 
       requestAnimationFrame(() => {
-        const setWidth = this.scrollWidth / 3;
-        if (setWidth > 0) {
-          this.scrollLeft = setWidth;
+        const totalSets = Math.max(
+          1,
+          1 + this.createdClones.length / this.originalItems.length,
+        );
+        const singleSetWidth = this.scrollWidth / totalSets;
+        if (singleSetWidth > 0) {
+          this.scrollLeft = singleSetWidth;
         }
       });
     }
@@ -480,10 +531,14 @@ const displayItems = [...items, ...items, ...items];
     private handleMobileScroll() {
       if (!this.isMobile) return;
 
-      const singleSetWidth = this.scrollWidth / 3;
+      const totalSets = Math.max(
+        1,
+        1 + this.createdClones.length / this.originalItems.length,
+      );
+      const singleSetWidth = this.scrollWidth / totalSets;
       if (singleSetWidth <= 0) return;
 
-      if (this.scrollLeft >= singleSetWidth * 2) {
+      if (this.scrollLeft >= singleSetWidth * (totalSets - 1)) {
         this.scrollLeft -= singleSetWidth;
       } else if (this.scrollLeft <= 5) {
         this.scrollLeft += singleSetWidth;
@@ -491,8 +546,8 @@ const displayItems = [...items, ...items, ...items];
     }
 
     private measureBaseWidth() {
-      if (!this.items.length || this.isMobile) return;
-      const first = this.items[0];
+      if (!this.originalItems.length || this.isMobile) return;
+      const first = this.originalItems[0];
 
       const prevTransform = first.style.transform;
       const prevScale = first.style.scale;
@@ -512,6 +567,7 @@ const displayItems = [...items, ...items, ...items];
 
     private handleResize() {
       this.updateResponsiveConfig();
+      this.fillTrack();
     }
 
     private handleWheel(e: WheelEvent) {
@@ -565,7 +621,7 @@ const displayItems = [...items, ...items, ...items];
 
       this.items.forEach((item) => gsap.set(item, { display: "none" }));
 
-      while (posX < window.innerWidth && i < 20) {
+      while (posX < window.innerWidth && i < this.items.length) {
         const itemIdx = (this.headIndex + i) % this.items.length;
         const item = this.items[itemIdx];
         const scale = this.getScale(posX);
