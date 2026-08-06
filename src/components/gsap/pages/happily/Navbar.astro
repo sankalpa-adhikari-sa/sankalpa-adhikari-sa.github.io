@@ -1,9 +1,8 @@
 ---
-import { Icon } from "astro-icon/components";
 import LogoSvg from "../happily/components/logo.svg";
 import "./styles.css";
+import AnimDropdownNav from "./components/AnimDropdownNav.astro";
 import AnnouncementRibbon from "./components/AnnouncementRIbbon.astro";
-import { ActionButton } from "./components/button/index";
 ---
 
 <header class="header" data-color="light">
@@ -11,39 +10,8 @@ import { ActionButton } from "./components/button/index";
   <a class="header-logo" aria-label="header logo" href="#">
     <LogoSvg />
   </a>
-  <div class="nav-wrapper">
-    <nav class="nav-container">
-      <ul class="nav-items">
-        <li class="nav-items-li">
-          <a target="_self" class="nav-items-link" aria-label="shop">
-            <span>shop</span>
-            <Icon name={"heroicons:chevron-down"} />
-          </a>
-        </li>
-        <li class="nav-items-li">
-          <a target="_self" class="nav-items-link" aria-label="explore">
-            <span>explore</span>
-            <Icon name={"heroicons:chevron-down"} />
-          </a>
-        </li>
-        <li class="nav-items-li">
-          <a target="_self" class="nav-items-link" aria-label="subscribe">
-            <span>subscribe</span>
-          </a>
-        </li>
-      </ul>
-      <div class="nav-dropdown"></div>
-    </nav>
-    <div class="nav-actions">
-      <ActionButton icon={"heroicons:user"} />
-      <ActionButton icon={"heroicons:shopping-bag"} />
 
-      <button>
-        <span class="burger-line"></span>
-        <span class="burger-line"></span>
-      </button>
-    </div>
-  </div>
+  <AnimDropdownNav duration={0.3} />
 </header>
 
 <style>
@@ -63,60 +31,5 @@ import { ActionButton } from "./components/button/index";
     z-index: 1;
     width: calc(100vw - 4rem);
     color: var(--light);
-  }
-
-  .nav-wrapper {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: relative;
-    z-index: 2;
-    pointer-events: none;
-    max-width: calc(100% - 2rem);
-    padding: 1.2rem 0;
-    font-size: 1.6rem;
-  }
-  .nav-container {
-    align-items: center;
-    display: flex;
-    height: 100%;
-    left: 50%;
-    position: absolute;
-
-    top: 50%;
-    transform: translate(-50%, -50%);
-  }
-  .nav-actions {
-    display: flex;
-    gap: 0.8rem;
-    margin-left: auto;
-    position: relative;
-    z-index: 1;
-  }
-  .nav-items {
-    display: flex;
-  }
-  @media (min-width: 576px) {
-    .nav-items {
-      align-items: center;
-      gap: 2rem;
-      position: relative;
-      z-index: 1;
-    }
-  }
-
-  @media (min-width: 576px) {
-    .nav-items-link {
-      font-size: 1.6rem;
-      letter-spacing: -0.016rem;
-      line-height: 1.6rem;
-      transition: color 0.4s ease;
-      gap: 0.3rem 2.725px;
-    }
-  }
-  .nav-items-link {
-    display: inline-flex;
-    cursor: pointer;
-    align-items: center;
   }
 </style>

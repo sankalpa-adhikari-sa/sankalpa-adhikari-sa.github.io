@@ -4,7 +4,7 @@ import "./styles.css";
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import Hero from "../happily/components/sections/Hero.astro";
-import { ButtonWave } from "./components/button";
+import AnimDropdownNav from "./components/AnimDropdownNav.astro";
 ---
 
 <!doctype html>
@@ -20,17 +20,13 @@ import { ButtonWave } from "./components/button";
   <body class="reset" data-color="light">
     <Navbar />
     <Hero />
-    <ButtonWave
-      theme="dark"
-      style={{
-        fontSize: "1.6rem",
-        fontWeight: "500",
-      }}
-    >
-      shop now
-    </ButtonWave>
-    <ButtonWave waveWidth="101%" disableTextAnim duration={0.6} theme="dark"
-      >shop now</ButtonWave
-    >
+    <section style={{ display: "flex", flexDirection: "col" }}>
+      <div
+        style="min-height: 100vh; min-width: 100vw; display: flex; flex-direction: column"
+      >
+        hello
+      </div>
+    </section>
+    <AnimDropdownNav />
   </body>
 </html>
