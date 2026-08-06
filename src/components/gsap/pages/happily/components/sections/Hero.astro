@@ -1,16 +1,22 @@
 ---
 import { Image } from "astro:assets";
 import heroImg from "../../assets/happly_gummies_hero.webp";
-import { ButtonWaveText } from "../button";
+import { ButtonWave } from "../button";
 ---
 
 <section class="section-hero">
   <div class="section-wrapper">
     <Image class={"hero-image"} src={heroImg} alt="Happly Gummies Hero" />
     <h1 class="hero-heading">the right amount of good</h1>
-    <ButtonWaveText style={{ fontSize: "1.6rem", fontWeight: "500" }}
-      >shop now</ButtonWaveText
+    <ButtonWave
+      waveWidth="120%"
+      style={{
+        fontSize: "1.6rem",
+        fontWeight: "500",
+      }}
     >
+      shop now
+    </ButtonWave>
   </div>
 </section>
 

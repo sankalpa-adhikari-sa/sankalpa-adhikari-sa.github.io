@@ -4,6 +4,7 @@ import "./styles.css";
 import { Font } from "astro:assets";
 import { ClientRouter } from "astro:transitions";
 import Hero from "../happily/components/sections/Hero.astro";
+import { ButtonWave } from "./components/button";
 ---
 
 <!doctype html>
@@ -19,5 +20,17 @@ import Hero from "../happily/components/sections/Hero.astro";
   <body class="reset" data-color="light">
     <Navbar />
     <Hero />
+    <ButtonWave
+      theme="dark"
+      style={{
+        fontSize: "1.6rem",
+        fontWeight: "500",
+      }}
+    >
+      shop now
+    </ButtonWave>
+    <ButtonWave waveWidth="101%" disableTextAnim duration={0.6} theme="dark"
+      >shop now</ButtonWave
+    >
   </body>
 </html>

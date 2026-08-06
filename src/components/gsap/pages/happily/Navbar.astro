@@ -2,16 +2,12 @@
 import { Icon } from "astro-icon/components";
 import LogoSvg from "../happily/components/logo.svg";
 import "./styles.css";
+import AnnouncementRibbon from "./components/AnnouncementRIbbon.astro";
 import { ActionButton } from "./components/button/index";
 ---
 
 <header class="header" data-color="light">
-  <div class="announcement-ribbon">
-    <div class="announcement-ribbon-items">
-      <p class="announcement-item">use code "FIRSTORDER" for free shipping</p>
-      <p class="announcement-item">bundle & save up to 20%</p>
-    </div>
-  </div>
+  <AnnouncementRibbon pauseOnHover direction="right" />
   <a class="header-logo" aria-label="header logo" href="#">
     <LogoSvg />
   </a>
@@ -122,21 +118,5 @@ import { ActionButton } from "./components/button/index";
     display: inline-flex;
     cursor: pointer;
     align-items: center;
-  }
-</style>
-<style>
-  .announcement-ribbon {
-    z-index: 3;
-    position: relative;
-    overflow: hidden;
-    font-size: 1.4rem;
-    letter-spacing: -0.014rem;
-    line-height: 1.4rem;
-    background-color: var(--dark);
-  }
-  .announcement-ribbon-items {
-    display: inline-flex;
-    padding: 1.2rem 0;
-    color: white;
   }
 </style>

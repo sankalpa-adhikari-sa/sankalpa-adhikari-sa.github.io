@@ -7,27 +7,25 @@
   import { gsap, ScrollTrigger } from "@/utils/gsap-init";
 
   let lenis: Lenis | null = null;
+  let rafCallback: ((time: number) => void) | null = null;
 
   function lenisScroll() {
     lenis = new Lenis();
     lenis.on("scroll", ScrollTrigger.update);
-    gsap.ticker.add((time) => {
-      lenis!.raf(time * 700);
-    });
+    rafCallback = (time) => lenis!.raf(time * 700);
+    gsap.ticker.add(rafCallback);
     gsap.ticker.lagSmoothing(0);
   }
 
   function cleanup() {
     ScrollTrigger.getAll().forEach((t) => t.kill());
-    if (lenis) {
-      lenis.destroy();
-      lenis = null;
+    if (rafCallback) {
+      gsap.ticker.remove(rafCallback);
+      rafCallback = null;
     }
-    gsap.ticker.remove((time) => {
-      lenis?.raf(time * 700);
-    });
+    lenis?.destroy();
+    lenis = null;
   }
-
   lenisScroll();
   document.addEventListener("astro:before-swap", cleanup);
   document.addEventListener("astro:after-swap", lenisScroll);

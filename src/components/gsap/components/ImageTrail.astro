@@ -80,13 +80,6 @@ const testImages = [
 
   let activeCleanupFunctions: CleanupFunction[] = [];
 
-  function isTouchDevice() {
-    return (
-      "ontouchstart" in window ||
-      navigator.maxTouchPoints > 0 ||
-      window.matchMedia("(hover: none)").matches
-    );
-  }
   function supportsMouseHover() {
     return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
   }
