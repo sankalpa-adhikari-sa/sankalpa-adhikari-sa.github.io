@@ -1,28 +1,37 @@
 .reset,
-.reset * {
+.reset *:not(svg, svg *) {
   all: unset;
   box-sizing: border-box;
 }
+script, style {
+  display: none !important;
+}
+
 :root {
     --dark: #1c1c1c;
     --light:#fdf9ec; 
+    --white: #ffffff;
     --orange: #e26554;
     --orange-light: #f4cabb;
     --purple: #a86fb2;
     --purple-light:#e2cdd9;
     --blueberry: #7598c7;
     --blueberry-light: #d1dae0;
+    --font-sans: var(--font-suisse);
+    --font-mono:var(--font-sometype);
 }
 
 @media(min-width: 576px) {
     html {
-        font-size:.9765625vw
+        font-size:.9765625vw;
+        font-family: var(--font-sans);
     }
 }
 
 @media(min-width: 1024px) {
     html {
         font-size:.6944444444vw;
+        font-family: var(--font-sans);
         overscroll-behavior: none
     }
 }
@@ -33,10 +42,5 @@ body {
     line-height: 1.6rem;
     min-height: 100dvh;
     width: 100%
-}
-
-.c-button-wrapper {
-    background-color: #1c1c1c;
-    padding: 40px;
 }
 

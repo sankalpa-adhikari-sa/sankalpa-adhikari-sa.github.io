@@ -1,0 +1,57 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type Props = HTMLAttributes<"a"> &
+  HTMLAttributes<"button"> & {
+    icon: string;
+    ariaLabel?: string;
+    theme?: "auto" | "dark" | "light";
+  };
+
+const {
+  href,
+  icon,
+  ariaLabel,
+  class: className,
+  theme = "auto",
+  target,
+  type = "button",
+  ...rest
+} = Astro.props;
+
+const Tag = href ? "a" : "button";
+
+const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
+---
+
+<Tag
+  href={href}
+  target={target}
+  rel={rel}
+  type={Tag === "button" ? type : undefined}
+  aria-label={ariaLabel || rest["aria-label"]}
+  class:list={[
+    "button__action",
+    theme !== "auto" && `button--${theme}`,
+    className,
+  ]}
+  {...rest}
+>
+  <Icon class="button__icon" name={icon} aria-hidden="true" />
+</Tag>
+
+<style>
+  .button__action {
+    border-radius: 8rem;
+    gap: 2.4rem;
+    height: 3.4rem;
+    justify-content: flex-end;
+    overflow: hidden;
+    padding: 0.9rem;
+    transition: 0.4s cubic-bezier(0.645, 0.045, 0.355, 1);
+    width: 3.4rem;
+    background: hsla(0, 0%, 100%, 0.2);
+    color: #fff;
+  }
+</style>

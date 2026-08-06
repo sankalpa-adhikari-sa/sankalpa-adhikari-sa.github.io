@@ -8,7 +8,7 @@ type Props = HTMLAttributes<"a"> &
     ariaLabel?: string;
     theme?: "auto" | "dark" | "light";
     wave?: "orange" | "purple" | "blueberry";
-    size?: "sm" | "md" | "lg";
+    border?: boolean;
   };
 
 const {
@@ -18,7 +18,7 @@ const {
   class: className,
   theme = "auto",
   wave = "orange",
-  size = "md",
+  border = false,
   target,
   type = "button",
   ...rest
@@ -39,7 +39,7 @@ const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
     "button__wave",
     theme !== "auto" && `button--${theme}`,
     `button--wave-${wave}`,
-    `button--${size}`,
+    border && "button--has-border",
     className,
   ]}
   {...rest}
@@ -54,36 +54,47 @@ const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
 <style>
   .button__wave {
     --button-bg: var(--dark);
-    --button-text: var(--light);
+    --button-text: var(--white);
     --button-hover-bg: var(--orange);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
 
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    padding: 14px 28px;
+    padding: 1.2rem 2.4rem;
     text-decoration: none;
-    text-transform: uppercase;
-    font-family: inherit;
     font-weight: 700;
     letter-spacing: 0.5px;
     color: var(--button-text);
     background: transparent;
-    border: none;
-    border-radius: 999px;
+    border: 1px solid transparent;
+    border-radius: 8rem;
     overflow: hidden;
     isolation: isolate;
     cursor: pointer;
     z-index: 1;
-    transition: color 0.3s ease;
+    transition:
+      color 0.3s ease,
+      border-color 0.1s ease;
     -webkit-mask-image: -webkit-radial-gradient(white, black);
+    box-sizing: border-box;
   }
 
   .button__wave:hover,
   .button__wave:focus-visible {
     color: var(--button-hover-text);
+  }
+
+  /* Only apply border styles when border prop is true */
+  .button__wave.button--has-border {
+    border-color: var(--button-bg);
+  }
+
+  .button__wave.button--has-border:hover,
+  .button__wave.button--has-border:focus-visible {
+    border-color: var(--button-bg);
   }
 
   .button__wave:focus-visible {
@@ -98,52 +109,37 @@ const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
 
   :global([data-color="dark"]) .button__wave:not(.button--light) {
     --button-bg: var(--dark);
-    --button-text: var(--light);
+    --button-text: var(--white);
   }
 
   :global([data-color="light"]) .button__wave:not(.button--dark) {
-    --button-bg: var(--light);
+    --button-bg: var(--white);
     --button-text: var(--dark);
   }
 
   .button--dark {
     --button-bg: var(--dark);
-    --button-text: var(--light);
+    --button-text: var(--white);
   }
 
   .button--light {
-    --button-bg: var(--light);
+    --button-bg: var(--white);
     --button-text: var(--dark);
   }
 
   .button--wave-orange {
     --button-hover-bg: var(--orange);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
   }
 
   .button--wave-purple {
     --button-hover-bg: var(--purple);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
   }
 
   .button--wave-blueberry {
     --button-hover-bg: var(--blueberry);
-    --button-hover-text: var(--light);
-  }
-
-  .button--sm {
-    padding: 10px 18px;
-    font-size: 1.2rem;
-  }
-
-  .button--md {
-    padding: 14px 28px;
-    font-size: 1.4rem;
-  }
-
-  .button--lg {
-    padding: 18px 36px;
-    font-size: 1.6rem;
+    --button-hover-text: var(--white);
   }
 
   .button__wave::before {
@@ -188,8 +184,8 @@ const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
   }
 
   .button__icon {
-    width: 18px;
-    height: 18px;
+    width: 1.6rem;
+    height: 1.6rem;
     flex-shrink: 0;
   }
 </style>

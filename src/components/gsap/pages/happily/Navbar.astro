@@ -1,6 +1,8 @@
 ---
 import { Icon } from "astro-icon/components";
+import LogoSvg from "../happily/components/logo.svg";
 import "./styles.css";
+import { ActionButton } from "./components/button/index";
 ---
 
 <header class="header" data-color="light">
@@ -10,6 +12,9 @@ import "./styles.css";
       <p class="announcement-item">bundle & save up to 20%</p>
     </div>
   </div>
+  <a class="header-logo" aria-label="header logo" href="#">
+    <LogoSvg />
+  </a>
   <div class="nav-wrapper">
     <nav class="nav-container">
       <ul class="nav-items">
@@ -34,12 +39,9 @@ import "./styles.css";
       <div class="nav-dropdown"></div>
     </nav>
     <div class="nav-actions">
-      <a>
-        <Icon name={"heroicons:user"} />
-      </a>
-      <button>
-        <Icon name={"heroicons:shopping-bag"} />
-      </button>
+      <ActionButton icon={"heroicons:user"} />
+      <ActionButton icon={"heroicons:shopping-bag"} />
+
       <button>
         <span class="burger-line"></span>
         <span class="burger-line"></span>
@@ -47,3 +49,94 @@ import "./styles.css";
     </div>
   </div>
 </header>
+
+<style>
+  .header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .header-logo {
+    position: absolute;
+    left: 2rem;
+    top: 4.9rem;
+    z-index: 1;
+    width: calc(100vw - 4rem);
+    color: var(--light);
+  }
+
+  .nav-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+    max-width: calc(100% - 2rem);
+    padding: 1.2rem 0;
+    font-size: 1.6rem;
+  }
+  .nav-container {
+    align-items: center;
+    display: flex;
+    height: 100%;
+    left: 50%;
+    position: absolute;
+
+    top: 50%;
+    transform: translate(-50%, -50%);
+  }
+  .nav-actions {
+    display: flex;
+    gap: 0.8rem;
+    margin-left: auto;
+    position: relative;
+    z-index: 1;
+  }
+  .nav-items {
+    display: flex;
+  }
+  @media (min-width: 576px) {
+    .nav-items {
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+  }
+
+  @media (min-width: 576px) {
+    .nav-items-link {
+      font-size: 1.6rem;
+      letter-spacing: -0.016rem;
+      line-height: 1.6rem;
+      transition: color 0.4s ease;
+      gap: 0.3rem 2.725px;
+    }
+  }
+  .nav-items-link {
+    display: inline-flex;
+    cursor: pointer;
+    align-items: center;
+  }
+</style>
+<style>
+  .announcement-ribbon {
+    z-index: 3;
+    position: relative;
+    overflow: hidden;
+    font-size: 1.4rem;
+    letter-spacing: -0.014rem;
+    line-height: 1.4rem;
+    background-color: var(--dark);
+  }
+  .announcement-ribbon-items {
+    display: inline-flex;
+    padding: 1.2rem 0;
+    color: white;
+  }
+</style>

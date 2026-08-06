@@ -8,6 +8,7 @@ type Props = HTMLAttributes<"a"> &
     ariaLabel?: string;
     theme?: "auto" | "dark" | "light";
     wave?: "orange" | "purple" | "blueberry";
+    border?: boolean;
   };
 
 const {
@@ -19,6 +20,7 @@ const {
   wave = "orange",
   target,
   type = "button",
+  border = false,
   ...rest
 } = Astro.props;
 
@@ -39,6 +41,7 @@ const slotContent = await Astro.slots.render("default");
     "button__wave-text",
     theme !== "auto" && `button--${theme}`,
     `button--wave-${wave}`,
+    border && "button--has-border",
     className,
   ]}
   data-btn-animate
@@ -58,9 +61,9 @@ const slotContent = await Astro.slots.render("default");
 <style>
   .button__wave-text {
     --button-bg: var(--dark);
-    --button-text: var(--light);
+    --button-text: var(--white);
     --button-hover-bg: var(--orange);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
 
     position: relative;
     display: inline-flex;
@@ -68,11 +71,10 @@ const slotContent = await Astro.slots.render("default");
     justify-content: space-between;
     gap: 12px;
     text-decoration: none;
-    font-family: inherit;
     font-weight: 700;
     color: var(--button-text);
     background: transparent;
-    border: none;
+    border: 1px solid transparent;
     border-radius: 8rem;
     overflow: hidden;
     padding: 1.2rem 2.4rem;
@@ -80,13 +82,26 @@ const slotContent = await Astro.slots.render("default");
     isolation: isolate;
     cursor: pointer;
     z-index: 1;
-    transition: color 0.3s ease;
+    transition:
+      color 0.3s ease,
+      border-color 0.1s ease;
     -webkit-mask-image: -webkit-radial-gradient(white, black);
+    box-sizing: border-box;
   }
 
   .button__wave-text:hover,
   .button__wave-text:focus-visible {
     color: var(--button-hover-text);
+  }
+
+  /* Only apply border styles when border prop is true */
+  .button__wave-text.button--has-border {
+    border-color: var(--button-bg);
+  }
+
+  .button__wave-text.button--has-border:hover,
+  .button__wave-text.button--has-border:focus-visible {
+    border-color: var(--button-bg);
   }
 
   .button__wave-text:focus-visible {
@@ -101,37 +116,37 @@ const slotContent = await Astro.slots.render("default");
 
   :global([data-color="dark"]) .button__wave-text:not(.button--light) {
     --button-bg: var(--dark);
-    --button-text: var(--light);
+    --button-text: var(--white);
   }
 
   :global([data-color="light"]) .button__wave-text:not(.button--dark) {
-    --button-bg: var(--light);
+    --button-bg: var(--white);
     --button-text: var(--dark);
   }
 
   .button--dark {
     --button-bg: var(--dark);
-    --button-text: var(--light);
+    --button-text: var(--white);
   }
 
   .button--light {
-    --button-bg: var(--light);
+    --button-bg: var(--white);
     --button-text: var(--dark);
   }
 
   .button--wave-orange {
     --button-hover-bg: var(--orange);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
   }
 
   .button--wave-purple {
     --button-hover-bg: var(--purple);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
   }
 
   .button--wave-blueberry {
     --button-hover-bg: var(--blueberry);
-    --button-hover-text: var(--light);
+    --button-hover-text: var(--white);
   }
 
   .button__wave-text::before {
@@ -181,6 +196,10 @@ const slotContent = await Astro.slots.render("default");
     white-space: nowrap;
   }
 
+  .button__label__text > * {
+    display: inline-block !important;
+  }
+
   .button__label__text:nth-child(2) {
     position: absolute;
     top: 0;
@@ -193,8 +212,8 @@ const slotContent = await Astro.slots.render("default");
     will-change: transform;
   }
   .button__icon {
-    width: 18px;
-    height: 18px;
+    width: 1.6rem;
+    height: 1.6rem;
     flex-shrink: 0;
   }
   .button__label__text:nth-child(1) {
@@ -208,41 +227,66 @@ const slotContent = await Astro.slots.render("default");
 
 <script>
   import { gsap, SplitText, CustomEase } from "@/utils/gsap-init";
-  CustomEase.create("waveEase", "0.645, 0.045, 0.355, 1");
 
-  document
-    .querySelectorAll<HTMLElement>("[data-btn-animate]")
-    .forEach((button) => {
-      const targets = button.querySelectorAll<HTMLElement>(
-        ".button__label__text",
-      );
-      if (targets.length < 2) return;
+  let ctx: gsap.Context | undefined;
+  let splitInstances: InstanceType<typeof SplitText>[] = [];
 
-      const splitTexts = Array.from(targets).map((text) =>
-        SplitText.create(text, { type: "chars", mask: "chars" }),
-      );
+  async function initButtonWaveTextAnimation() {
+    // Revert previous animations and restore original HTML DOM structure
+    ctx?.revert();
+    splitInstances.forEach((instance) => instance.revert());
+    splitInstances = [];
 
-      const tl = gsap.timeline({
-        paused: true,
-        defaults: {
-          stagger: 0,
-          duration: 0.45,
-          ease: "waveEase",
-        },
-      });
+    // Ensure custom fonts are loaded so SplitText measures dimensions accurately
+    await document.fonts.ready;
 
-      gsap.set(splitTexts[1].chars, { y: "100%" });
+    ctx = gsap.context(() => {
+      CustomEase.create("waveEase", "0.645, 0.045, 0.355, 1");
 
-      tl.to(splitTexts[0].chars, { y: "-105%" }).to(
-        splitTexts[1].chars,
-        { y: "0%" },
-        "<",
-      );
+      document
+        .querySelectorAll<HTMLElement>("[data-btn-animate]")
+        .forEach((button) => {
+          const targets = button.querySelectorAll<HTMLElement>(
+            ".button__label__text",
+          );
+          if (targets.length < 2) return;
 
-      button.addEventListener("mouseenter", () => tl.play());
-      button.addEventListener("mouseleave", () => tl.reverse());
+          // Instantiate SplitText using 'new' and store instances for cleanup
+          const splitTexts = Array.from(targets).map((text) => {
+            const split = new SplitText(text, { type: "chars" });
+            splitInstances.push(split);
+            return split;
+          });
 
-      button.addEventListener("focus", () => tl.play());
-      button.addEventListener("blur", () => tl.reverse());
+          const tl = gsap.timeline({
+            paused: true,
+            defaults: {
+              stagger: 0.02, // Added stagger for wave effect
+              duration: 0.45,
+              ease: "waveEase",
+            },
+          });
+
+          gsap.set(splitTexts[1].chars, { y: "100%" });
+
+          tl.to(splitTexts[0].chars, { y: "-105%" }).to(
+            splitTexts[1].chars,
+            { y: "0%" },
+            "<",
+          );
+
+          button.addEventListener("mouseenter", () => tl.play());
+          button.addEventListener("mouseleave", () => tl.reverse());
+
+          button.addEventListener("focus", () => tl.play());
+          button.addEventListener("blur", () => tl.reverse());
+        });
     });
+  }
+
+  document.addEventListener("astro:page-load", initButtonWaveTextAnimation);
+  document.addEventListener("astro:before-swap", () => {
+    ctx?.revert();
+    splitInstances.forEach((instance) => instance.revert());
+  });
 </script>
