@@ -2,7 +2,7 @@
 id: "pixelated-distorsion"
 title: "Pixelated distorsion"
 slug: "pixelated-distorsion"
-pubDate: 2025-08-11T02:15:00+05:45
+pubDate: 2026-08-11T02:15:00+05:45
 draft: false
 tags:
   - gsap
@@ -10,7 +10,7 @@ tags:
   - shaders
 iframeUrl: "/api/sandbox/iframe/pixelated-distorsion"
 preview:
-  image_src: "https://picsum.photos/id/1074/300/200"
+  image_src: "../../assets/sandbox-images/pixelated-distorsion.png"
   video_src: ""
 authors:
   - sankalpa

@@ -105,14 +105,12 @@ export const sandboxComponents = defineCollection({
 			description: z.string().optional(),
 			pubDate: z.coerce.date().default(() => new Date()),
 			lastUpdated: z.coerce.date().optional(),
-			cover: image().optional(),
-			coverAlt: z.string().optional(),
 			tags: z.array(z.string()).optional(),
 			iframeUrl: z.string(),
 			src: z.string().optional(),
 			preview: z
 				.object({
-					image_src: z.string().or(image()).optional(),
+					image_src: image().optional(),
 					video_src: z.string().optional(),
 				})
 				.optional(),

@@ -1,8 +1,52 @@
 ---
-import PixelReveal from "@/components/sandbox/threejs/PixelReveal";
+import PixelReveal, {
+  type MediaItem,
+} from "@/components/sandbox/threejs/PixelReveal";
 import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+
+const portfolioItems: MediaItem[] = [
+  {
+    id: 0,
+    title: "Brand Strategy & Identity",
+    src: "/vids/3.mp4",
+    type: "video",
+  },
+  {
+    id: 1,
+    title: "Static Web Design",
+    src: "https://picsum.photos/id/1074/300/200",
+    type: "image",
+  },
+  {
+    id: 2,
+    title: "Product UX/UI Design",
+    src: "/vids/2.mp4",
+    type: "video",
+  },
+
+  {
+    id: 3,
+    title: "Motion Design & Content",
+    src: "/vids/3.mp4",
+    type: "video",
+  },
+
+  {
+    id: 4,
+    title: "Motion Design & Content",
+    src: "/vids/5.mp4",
+    type: "video",
+  },
+
+  {
+    id: 5,
+    title: "Motion Design & Content",
+    src: "/vids/4.mp4",
+    type: "video",
+  },
+];
 ---
 
 <PageLayout title="" description="">
-    <PixelReveal client:only="react" />
+  <PixelReveal client:only="react" items={portfolioItems} />
 </PageLayout>

@@ -4,16 +4,21 @@ import * as THREE from "three";
 import fragmentShader from "@/components/sandbox/threejs/shaders/PixilatedReveal/fragmentShader.glsl";
 import vertexShader from "@/components/sandbox/threejs/shaders/PixilatedReveal/vertexShader.glsl";
 
-interface ServiceItem {
-	id: number;
+export interface MediaItem {
+	id: number | string;
 	title: string;
-	video: string;
+	src: string;
+	type: "video" | "image";
+}
+
+interface PixelRevealListProps {
+	items: MediaItem[];
 }
 
 interface Uniforms {
 	[key: string]: THREE.IUniform;
-	uTexA: THREE.IUniform<THREE.Texture>;
-	uTexB: THREE.IUniform<THREE.Texture>;
+	uTexA: THREE.IUniform<THREE.Texture | null>;
+	uTexB: THREE.IUniform<THREE.Texture | null>;
 	uProgress: THREE.IUniform<number>;
 	uGridSize: THREE.IUniform<number>;
 	uPixelColor: THREE.IUniform<THREE.Color>;
@@ -41,43 +46,10 @@ interface ItemHandler {
 	leaveHandler: () => void;
 }
 
-const SERVICES: ServiceItem[] = [
-	{
-		id: 0,
-		title: "Brand Strategy & Identity",
-		video: "https://www.produx.design/ContributionVideos/Vid%204.webm",
-	},
-	{
-		id: 1,
-		title: "Web Design & Development",
-		video: "https://www.produx.design/ContributionVideos/Vid%202.webm",
-	},
-	{
-		id: 2,
-		title: "Product UX/UI Design",
-		video: "https://www.produx.design/ContributionVideos/Vid%203.webm",
-	},
-	{
-		id: 3,
-		title: "Motion Design & Content",
-		video: "https://www.produx.design/videos/JournalVideos/4.mp4",
-	},
-	{
-		id: 4,
-		title: "Motion Design & Content",
-		video: "https://www.produx.design/videos/JournalVideos/4.mp4",
-	},
-	{
-		id: 5,
-		title: "Motion Design & Content",
-		video: "https://www.produx.design/videos/JournalVideos/4.mp4",
-	},
-];
-
 const clamp = (val: number, min: number, max: number): number =>
 	Math.min(Math.max(val, min), max);
 
-export default function PixelRevealList() {
+export default function PixelRevealList({ items }: PixelRevealListProps) {
 	const containerRef = useRef<HTMLDivElement | null>(null);
 	const canvasRef = useRef<HTMLCanvasElement | null>(null);
 	const listRef = useRef<HTMLDivElement | null>(null);
@@ -87,7 +59,7 @@ export default function PixelRevealList() {
 		const canvas = canvasRef.current;
 		const list = listRef.current;
 
-		if (!container || !canvas || !list) return;
+		if (!container || !canvas || !list || items.length === 0) return;
 
 		let width = container.offsetWidth;
 		let height = container.offsetHeight;
@@ -131,33 +103,58 @@ export default function PixelRevealList() {
 			hoverIntentDelay: 60,
 		};
 
-		const getVideoAspectRatio = (v: HTMLVideoElement): number => {
-			if (v.videoWidth && v.videoHeight) {
-				return v.videoWidth / v.videoHeight;
+		// Determine Aspect Ratio based on Media Type (Video vs Image)
+		const getMediaAspectRatio = (
+			media: HTMLVideoElement | HTMLImageElement,
+		): number => {
+			if (media instanceof HTMLVideoElement) {
+				return media.videoWidth && media.videoHeight
+					? media.videoWidth / media.videoHeight
+					: 16 / 9;
+			} else {
+				return media.naturalWidth && media.naturalHeight
+					? media.naturalWidth / media.naturalHeight
+					: 16 / 9;
 			}
-			return 16 / 9;
 		};
 
-		const videos: HTMLVideoElement[] = SERVICES.map((item) => {
-			const v = document.createElement("video");
-			v.crossOrigin = "anonymous";
-			v.preload = "auto";
-			v.loop = true;
-			v.muted = true;
-			v.playsInline = true;
-			v.src = item.video;
-			v.load();
-			return v;
-		});
+		const mediaElements: (HTMLVideoElement | HTMLImageElement)[] = [];
+		const textures: THREE.Texture[] = items.map((item) => {
+			if (item.type === "video") {
+				const v = document.createElement("video");
+				v.crossOrigin = "anonymous";
+				v.preload = "auto";
+				v.loop = true;
+				v.muted = true;
+				v.playsInline = true;
+				v.src = item.src;
+				v.load();
+				mediaElements.push(v);
 
-		const textures: THREE.VideoTexture[] = videos.map((v) => {
-			const tex = new THREE.VideoTexture(v);
-			tex.minFilter = THREE.LinearFilter;
-			tex.magFilter = THREE.LinearFilter;
-			if ("colorSpace" in tex) {
-				tex.colorSpace = THREE.SRGBColorSpace;
+				const tex = new THREE.VideoTexture(v);
+				tex.minFilter = THREE.LinearFilter;
+				tex.magFilter = THREE.LinearFilter;
+				if ("colorSpace" in tex) {
+					tex.colorSpace = THREE.SRGBColorSpace;
+				}
+				return tex;
+			} else {
+				const img = new Image();
+				img.crossOrigin = "anonymous";
+				img.src = item.src;
+				mediaElements.push(img);
+
+				const tex = new THREE.Texture(img);
+				img.onload = () => {
+					tex.needsUpdate = true;
+				};
+				tex.minFilter = THREE.LinearFilter;
+				tex.magFilter = THREE.LinearFilter;
+				if ("colorSpace" in tex) {
+					tex.colorSpace = THREE.SRGBColorSpace;
+				}
+				return tex;
 			}
-			return tex;
 		});
 
 		const primeVideo = (v: HTMLVideoElement): void => {
@@ -167,16 +164,18 @@ export default function PixelRevealList() {
 			}
 		};
 
-		videos.forEach((v) => {
-			if (v.readyState >= 2) primeVideo(v);
-			else
-				v.addEventListener("loadeddata", () => primeVideo(v), { once: true });
+		mediaElements.forEach((m) => {
+			if (m instanceof HTMLVideoElement) {
+				if (m.readyState >= 2) primeVideo(m);
+				else
+					m.addEventListener("loadeddata", () => primeVideo(m), { once: true });
+			}
 		});
 
 		const geometry = new THREE.PlaneGeometry(1, 1, 32, 32);
 		const uniforms: Uniforms = {
-			uTexA: { value: textures[0] },
-			uTexB: { value: textures[0] },
+			uTexA: { value: textures[0] || null },
+			uTexB: { value: textures[0] || null },
 			uProgress: { value: 0 },
 			uGridSize: { value: config.gridSize },
 			uPixelColor: { value: config.pixelColor },
@@ -260,15 +259,18 @@ export default function PixelRevealList() {
 		const revealItem = (index: number): void => {
 			if (activeIdx === index && !isExiting) return;
 
-			const targetVideo = videos[index];
-			targetVideo.play().catch(() => {});
+			const targetMedia = mediaElements[index];
+			if (targetMedia instanceof HTMLVideoElement) {
+				targetMedia.play().catch(() => {});
+			}
+
 			const isInitial = activeIdx === -1;
 			const revealDirection = isInitial ? -1 : index > activeIdx ? -1 : 1;
 
 			activeIdx = index;
 			isExiting = false;
 
-			const aspectRatio = getVideoAspectRatio(targetVideo);
+			const aspectRatio = getMediaAspectRatio(targetMedia);
 			const planeW = config.planeWidth;
 			const planeH = planeW / aspectRatio;
 
@@ -370,19 +372,21 @@ export default function PixelRevealList() {
 					uniforms.uAlpha.value = 0;
 					activeIdx = -1;
 					isExiting = false;
-					videos.forEach((v) => {
-						v.pause();
+					mediaElements.forEach((m) => {
+						if (m instanceof HTMLVideoElement) {
+							m.pause();
+						}
 					});
 				},
 			});
 		};
 
 		let hideTimeout: ReturnType<typeof setTimeout> | null = null;
-		const items = Array.from(
+		const domItems = Array.from(
 			list.querySelectorAll<HTMLElement>(".service-item"),
 		);
 
-		const itemHandlers: ItemHandler[] = items.map((item, index) => {
+		const itemHandlers: ItemHandler[] = domItems.map((item, index) => {
 			const enterHandler = (): void => {
 				item.style.color = "#fff";
 				if (hideTimeout) {
@@ -417,8 +421,8 @@ export default function PixelRevealList() {
 
 			config.planeWidth = getClampedPlaneWidth();
 			if (activeIdx !== -1) {
-				const currentVideo = videos[activeIdx];
-				const aspect = getVideoAspectRatio(currentVideo);
+				const currentMedia = mediaElements[activeIdx];
+				const aspect = getMediaAspectRatio(currentMedia);
 				const planeW = config.planeWidth;
 				const planeH = planeW / aspect;
 				mesh.scale.set(planeW, planeH, 1);
@@ -448,13 +452,15 @@ export default function PixelRevealList() {
 			textures.forEach((t) => {
 				t.dispose();
 			});
-			videos.forEach((v) => {
-				v.pause();
-				v.removeAttribute("src");
-				v.load();
+			mediaElements.forEach((m) => {
+				if (m instanceof HTMLVideoElement) {
+					m.pause();
+					m.removeAttribute("src");
+					m.load();
+				}
 			});
 		};
-	}, []);
+	}, [items]);
 
 	return (
 		<div
@@ -467,7 +473,6 @@ export default function PixelRevealList() {
 				overflow: "hidden",
 			}}
 		>
-			<h1>Source: https://www.produx.design/</h1>
 			<canvas
 				ref={canvasRef}
 				style={{
@@ -483,7 +488,7 @@ export default function PixelRevealList() {
 				ref={listRef}
 				style={{ position: "relative", zIndex: 1, padding: "100px 10%" }}
 			>
-				{SERVICES.map((item) => (
+				{items.map((item, index) => (
 					<div
 						key={item.id}
 						className="service-item"
@@ -501,7 +506,7 @@ export default function PixelRevealList() {
 							{item.title}
 						</h2>
 						<span style={{ color: "#555", fontSize: "1.2rem" }}>
-							0{item.id + 1}
+							0{index + 1}
 						</span>
 					</div>
 				))}

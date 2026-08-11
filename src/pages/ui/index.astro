@@ -1,268 +1,298 @@
 ---
+import { Image } from "astro:assets";
 import { getCollection } from "astro:content";
 import { Icon } from "astro-icon/components";
 import PageLayout from "@/layouts/core/PageLayout.astro";
 import { filterContentForListing } from "@/utils/content";
 
 const components = filterContentForListing(
-    await getCollection("sandboxComponents"),
+  await getCollection("sandboxComponents"),
 ).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 ---
 
 <PageLayout title="UI" description="Browse all UI components">
-    <header
-        class="mb-12 border-b border-primary/15 pb-8 pt-24"
-        data-nav-section-message="Articles"
+  <header
+    class="mb-12 border-b border-primary/15 pb-8 pt-24"
+    data-nav-section-message="Articles"
+  >
+    <p
+      class="mb-2 font-mono text-xs uppercase tracking-[0.25em] text-primary/40 opacity-0 translate-y-8"
+      data-reveal
     >
-        <p
-            class="mb-2 font-mono text-xs uppercase tracking-[0.25em] text-primary/40 opacity-0 translate-y-8"
-            data-reveal
+      UI
+    </p>
+
+    <div class="flex items-end justify-between gap-6 mt-4">
+      <div>
+        <h1
+          class="text-4xl font-medium tracking-tight md:text-5xl opacity-0 translate-y-8"
+          data-reveal
         >
-            UI
+          UI Components
+        </h1>
+
+        <p
+          class="mt-2 max-w-xl text-primary/60 opacity-0 translate-y-8"
+          data-reveal
+        >
+          UI components built with Astro, GSAP, ThreeJs and Reactjs
         </p>
+      </div>
+    </div>
+  </header>
 
-        <div class="flex items-end justify-between gap-6 mt-4">
-            <div>
-                <h1
-                    class="text-4xl font-medium tracking-tight md:text-5xl opacity-0 translate-y-8"
-                    data-reveal
-                >
-                    UI Components
-                </h1>
+  <section class="mt-8">
+    <div
+      class="grid grid-cols-1 border-l border-t border-border sm:grid-cols-2 lg:grid-cols-3"
+    >
+      {
+        components.map((item, index) => {
+          const { title, tags, preview, id, slug } = item.data;
+          const linkHref = `/ui/${slug ?? id}`;
+          const videoSrc = preview?.video_src;
+          const imageSrc = preview?.image_src;
 
-                <p
-                    class="mt-2 max-w-xl text-primary/60 opacity-0 translate-y-8"
-                    data-reveal
-                >
-                    UI components built with Astro, GSAP, ThreeJs and Reactjs
-                </p>
-            </div>
-        </div>
-    </header>
-    <section class="mt-8">
-        <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-            {
-                components.map((item) => {
-                    const { title, subtitle, tags, cover, preview, id, slug } =
-                        item.data;
-                    const linkHref = `/ui/${slug ?? id ?? slug}`;
-                    const videoSrc = preview?.video_src;
+          const isEager = index < 4;
 
-                    const imageSrc = cover
-                        ? typeof cover === "string"
-                            ? cover
-                            : cover.src
-                        : typeof preview?.image_src === "string"
-                          ? preview.image_src
-                          : preview?.image_src?.src;
+          return (
+            <a
+              href={linkHref}
+              data-articles-link
+              class="group relative flex flex-col justify-between border-b border-r border-border p-2 transition-colors duration-200 hover:bg-tertiary opacity-0 translate-y-8"
+              data-reveal
+            >
+              <span class="absolute left-0.5 top-0.5 h-5 w-5 border-l-2 border-t-2 border-tertiary-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <span class="absolute right-0.5 top-0.5 h-5 w-5 border-r-2 border-t-2 border-tertiary-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <span class="absolute bottom-0.5 left-0.5 h-5 w-5 border-b-2 border-l-2 border-tertiary-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <span class="absolute bottom-0.5 right-0.5 h-5 w-5 border-b-2 border-r-2 border-tertiary-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
 
-                    return (
-                        <a
-                            href={linkHref}
-                            data-articles-link
-                            data-cover={imageSrc}
-                            class="group relative flex min-h-[220px] flex-col justify-between rounded-none border border-border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-accent/40 opacity-0 translate-y-8"
-                            data-reveal
-                        >
-                            <div>
-                                {(videoSrc || imageSrc) && (
-                                    <div class="mb-4 aspect-video w-full overflow-hidden rounded-none border border-border bg-muted">
-                                        {videoSrc ? (
-                                            <video
-                                                src={videoSrc}
-                                                autoplay
-                                                loop
-                                                muted
-                                                playsinline
-                                                class="h-full w-full object-cover"
-                                            />
-                                        ) : (
-                                            <img
-                                                src={imageSrc}
-                                                alt={title}
-                                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                            />
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+              <div class="flex flex-col gap-3">
+                {(videoSrc || imageSrc) && (
+                  <div class="aspect-16/10 w-full overflow-hidden border border-border/50 bg-muted">
+                    {videoSrc ? (
+                      <video
+                        src={videoSrc}
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                        class="h-full w-full object-cover"
+                      />
+                    ) : imageSrc ? (
+                      <Image
+                        src={imageSrc}
+                        alt={title}
+                        width={600}
+                        height={375}
+                        loading={isEager ? "eager" : "lazy"}
+                        fetchpriority={isEager ? "high" : "auto"}
+                        class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : null}
+                  </div>
+                )}
 
-                            <div class="mt-auto flex flex-col justify-end pt-2">
-                                {tags && tags.length > 0 && (
-                                    <div class="mb-2 flex flex-wrap gap-1">
-                                        {tags.map((tag) => (
-                                            <span class="rounded-none border border-border bg-secondary/60 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-secondary-foreground">
-                                                {tag}
-                                            </span>
-                                        ))}
-                                    </div>
-                                )}
+                <div class="flex items-start justify-between gap-2">
+                  <h3 class="text-lg font-medium transition-colors duration-200 group-hover:text-tertiary-foreground">
+                    {title}
+                  </h3>
+                  <div class="inline-flex items-stretch gap-1 pointer-events-none transition-all duration-200 group-hover:pointer-events-auto">
+                    <span class="inline-flex items-center justify-center bg-foreground p-1.5 text-background transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-[calc(100%+0.25rem+1.85rem)] group-hover:scale-105">
+                      <Icon
+                        name="heroicons:arrow-up-right-20-solid"
+                        class="h-3 w-3 transition-transform duration-200"
+                      />
+                    </span>
 
-                                <div class="flex items-start justify-between gap-2">
-                                    <h2 class="text-base font-medium tracking-tight text-card-foreground group-hover:text-primary">
-                                        {title}
-                                    </h2>
-                                    <Icon
-                                        name="heroicons:arrow-up-right-20-solid"
-                                        class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
-                                    />
-                                </div>
+                    <span class="inline-flex items-center bg-foreground px-2.5 font-mono text-xs font-medium uppercase tracking-wider text-background transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:-translate-x-[calc(100%+0.25rem-1.85rem)]">
+                      view
+                    </span>
+                  </div>
+                </div>
+              </div>
 
-                                {subtitle && (
-                                    <p class="mt-1 text-xs text-muted-foreground line-clamp-2">
-                                        {subtitle}
-                                    </p>
-                                )}
-                            </div>
-                        </a>
-                    );
-                })
-            }
-        </div>
-    </section>
+              {tags && tags.length > 0 && (
+                <ul class="mt-auto flex flex-wrap gap-2 py-2">
+                  {tags.map((tag) => (
+                    <li class="rounded-full border border-tertiary-foreground px-2.5 py-1 font-mono text-[11px] uppercase tracking-wide text-muted-foreground transition-colors duration-200 group-hover:text-tertiary-foreground/80">
+                      {tag}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </a>
+          );
+        })
+      }
+    </div>
+  </section>
 </PageLayout>
-
 <script>
-    import { gsap } from "@/utils/gsap-init";
-    import { audio } from "@/utils/audio";
+  import { gsap } from "@/utils/gsap-init";
+  import { audio } from "@/utils/audio";
 
-    let ctx: gsap.Context | undefined;
+  let ctx: gsap.Context | undefined;
 
-    function initArticlesListAnimation() {
-        ctx?.revert();
+  function initArticlesListAnimation() {
+    ctx?.revert();
 
-        ctx = gsap.context(() => {
-            const onLinkHover = () => {
-                audio.play("hover");
-            };
+    ctx = gsap.context(() => {
+      const onLinkHover = () => {
+        audio.play("hover");
+      };
 
-            const preview = document.querySelector<HTMLDivElement>(
-                "#article-cover-preview",
-            );
-            const previewImg = preview?.querySelector("img") ?? null;
-            const desktopQuery = window.matchMedia("(min-width: 48rem)");
-            const reducedMotionQuery = window.matchMedia(
-                "(prefers-reduced-motion: reduce)",
-            );
+      const preview = document.querySelector<HTMLDivElement>(
+        "#article-cover-preview",
+      );
+      const previewImg = preview?.querySelector("img") ?? null;
+      const desktopQuery = window.matchMedia("(min-width: 48rem)");
+      const reducedMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
 
-            if (preview) {
-                gsap.set(preview, { yPercent: -50, scale: 0.95 });
-            }
+      if (preview) {
+        gsap.set(preview, { yPercent: -50, scale: 0.95 });
+      }
 
-            const articlesLinks = document.querySelectorAll<HTMLElement>(
-                "[data-articles-link]",
-            );
+      const articlesLinks = document.querySelectorAll<HTMLElement>(
+        "[data-articles-link]",
+      );
 
-            const cleanupFns: Array<() => void> = [];
+      const cleanupFns: Array<() => void> = [];
+      const preloadedImages = new Map<string, HTMLImageElement>();
 
-            articlesLinks.forEach((link) => {
-                link.addEventListener("mouseenter", onLinkHover);
-                cleanupFns.push(() =>
-                    link.removeEventListener("mouseenter", onLinkHover),
-                );
+      articlesLinks.forEach((link) => {
+        link.addEventListener("mouseenter", onLinkHover);
+        cleanupFns.push(() =>
+          link.removeEventListener("mouseenter", onLinkHover),
+        );
 
-                const cover = link.dataset.cover;
-                if (!cover || !preview || !previewImg) return;
+        const cover = link.dataset.cover;
+        if (!cover || !preview || !previewImg) return;
 
-                const onEnter = () => {
-                    if (!desktopQuery.matches) return;
+        if (!preloadedImages.has(cover)) {
+          const img = new window.Image();
+          img.src = cover;
+          preloadedImages.set(cover, img);
+        }
 
-                    previewImg.src = cover;
-                    previewImg.alt = link.dataset.coverAlt ?? "";
+        const onEnter = () => {
+          if (!desktopQuery.matches) return;
 
-                    const rect = link.getBoundingClientRect();
-                    const top = gsap.utils.clamp(
-                        140,
-                        window.innerHeight - 140,
-                        rect.top + rect.height / 2,
-                    );
-                    const rotation = gsap.utils.random(-5, 5);
+          previewImg.src = cover;
+          previewImg.alt = link.dataset.coverAlt ?? "";
 
-                    gsap.killTweensOf(preview);
-                    gsap.set(preview, { top });
-                    gsap.to(preview, {
-                        opacity: 1,
-                        scale: 1,
-                        rotation,
-                        duration: 0.35,
-                        ease: "power2.out",
-                    });
-                };
+          const rect = link.getBoundingClientRect();
+          const top = gsap.utils.clamp(
+            140,
+            window.innerHeight - 140,
+            rect.top + rect.height / 2,
+          );
+          const rotation = gsap.utils.random(-5, 5);
 
-                const onLeave = () => {
-                    gsap.killTweensOf(preview);
-                    gsap.to(preview, {
-                        opacity: 0,
-                        scale: 0.95,
-                        duration: 0.2,
-                        ease: "power2.in",
-                    });
-                };
+          gsap.killTweensOf(preview);
+          gsap.set(preview, { top });
+          gsap.to(preview, {
+            opacity: 1,
+            scale: 1,
+            rotation,
+            duration: 0.35,
+            ease: "power2.out",
+          });
+        };
 
-                link.addEventListener("mouseenter", onEnter);
-                link.addEventListener("mouseleave", onLeave);
-                cleanupFns.push(() => {
-                    link.removeEventListener("mouseenter", onEnter);
-                    link.removeEventListener("mouseleave", onLeave);
-                });
-            });
+        const onLeave = () => {
+          gsap.killTweensOf(preview);
+          gsap.to(preview, {
+            opacity: 0,
+            scale: 0.95,
+            duration: 0.2,
+            ease: "power2.in",
+          });
+        };
 
-            const monthGroups =
-                document.querySelectorAll<HTMLElement>("[data-month-group]");
-
-            if (reducedMotionQuery.matches) {
-                gsap.set(
-                    "[data-reveal], [data-month-heading], [data-articles-link]",
-                    {
-                        opacity: 1,
-                        y: 0,
-                    },
-                );
-            } else {
-                gsap.timeline().to("[data-reveal]", {
-                    y: 0,
-                    opacity: 1,
-                    duration: 1,
-                    stagger: 0.1,
-                    ease: "power3.out",
-                });
-
-                monthGroups.forEach((group) => {
-                    const heading = group.querySelector("[data-month-heading]");
-                    const rows = group.querySelectorAll("[data-articles-link]");
-
-                    gsap.timeline({
-                        scrollTrigger: {
-                            trigger: group,
-                            start: "top 85%",
-                        },
-                    })
-                        .to(heading, {
-                            y: 0,
-                            opacity: 1,
-                            duration: 0.7,
-                            ease: "power3.out",
-                        })
-                        .to(
-                            rows,
-                            {
-                                y: 0,
-                                opacity: 1,
-                                duration: 0.6,
-                                stagger: 0.05,
-                                ease: "power2.out",
-                            },
-                            "-=0.5",
-                        );
-                });
-            }
-
-            return () => {
-                cleanupFns.forEach((fn) => fn());
-            };
+        link.addEventListener("mouseenter", onEnter);
+        link.addEventListener("mouseleave", onLeave);
+        cleanupFns.push(() => {
+          link.removeEventListener("mouseenter", onEnter);
+          link.removeEventListener("mouseleave", onLeave);
         });
-    }
+      });
 
-    document.addEventListener("astro:page-load", initArticlesListAnimation);
-    document.addEventListener("astro:before-swap", () => ctx?.revert());
+      const monthGroups =
+        document.querySelectorAll<HTMLElement>("[data-month-group]");
+
+      if (reducedMotionQuery.matches) {
+        gsap.set("[data-reveal], [data-month-heading], [data-articles-link]", {
+          opacity: 1,
+          y: 0,
+        });
+      } else {
+        gsap.timeline().to("[data-reveal]", {
+          y: 0,
+          opacity: 1,
+          duration: 1,
+          stagger: 0.1,
+          ease: "power3.out",
+        });
+
+        monthGroups.forEach((group) => {
+          const heading = group.querySelector("[data-month-heading]");
+          const rows = group.querySelectorAll("[data-articles-link]");
+
+          gsap
+            .timeline({
+              scrollTrigger: {
+                trigger: group,
+                start: "top 85%",
+              },
+            })
+            .to(heading, {
+              y: 0,
+              opacity: 1,
+              duration: 0.7,
+              ease: "power3.out",
+            })
+            .to(
+              rows,
+              {
+                y: 0,
+                opacity: 1,
+                duration: 0.6,
+                stagger: 0.05,
+                ease: "power2.out",
+              },
+              "-=0.5",
+            );
+        });
+      }
+
+      return () => {
+        cleanupFns.forEach((fn) => fn());
+      };
+    });
+  }
+
+  document.addEventListener("astro:page-load", initArticlesListAnimation);
+  document.addEventListener("astro:before-swap", () => ctx?.revert());
+
+  document.addEventListener("astro:page-load", () => {
+    const videos = document.querySelectorAll("video");
+    videos.forEach((video) => {
+      video.muted = true;
+      video.defaultMuted = true;
+
+      const playPromise = video.play();
+
+      if (playPromise !== undefined) {
+        playPromise.catch((error) => {
+          console.warn("Initial autoplay failed, reloading video:", error);
+          video.load();
+          video
+            .play()
+            .catch((e) => console.error("Video completely failed to play:", e));
+        });
+      }
+    });
+  });
 </script>
