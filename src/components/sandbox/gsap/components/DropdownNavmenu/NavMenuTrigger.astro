@@ -1,0 +1,63 @@
+---
+import { Icon } from "astro-icon/components";
+
+export interface Props {
+  value?: string;
+  href?: string;
+  target?: string;
+  class?: string;
+}
+
+const { value, href = "#", target = "_self", class: className } = Astro.props;
+---
+
+<anim-dropdown-nav-trigger data-value={value}>
+  <a
+    href={href}
+    target={target}
+    tabindex="0"
+    class:list={["nav-items-link", className]}
+    aria-haspopup={value ? "true" : undefined}
+    aria-expanded={value ? "false" : undefined}
+    aria-controls={value ? `dropdown-${value}` : undefined}
+  >
+    <span><slot /></span>
+    {value && <Icon name="heroicons:chevron-down" class="chevron" />}
+  </a>
+</anim-dropdown-nav-trigger>
+
+<style>
+  .nav-items-link {
+    position: relative;
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    cursor: pointer;
+    text-decoration: none;
+    gap: 0.3rem;
+    z-index: 20;
+    color: var(--foreground);
+    transition: color 0.2s ease;
+  }
+
+  :global(anim-dropdown-nav.is-open) .nav-items-link {
+    color: var(--dark);
+  }
+
+  .nav-items-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  anim-dropdown-nav-trigger:not([data-value]):hover .nav-items-link {
+    opacity: 0.8;
+  }
+
+  .chevron {
+    width: 0.7rem;
+    height: 0.7rem;
+    transform-origin: center;
+    z-index: 20;
+  }
+</style>

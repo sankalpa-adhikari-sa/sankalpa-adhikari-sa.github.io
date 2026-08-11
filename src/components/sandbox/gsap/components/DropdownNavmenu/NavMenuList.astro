@@ -1,0 +1,25 @@
+---
+export interface Props {
+    class?: string;
+}
+
+const { class: className } = Astro.props;
+---
+
+<anim-dropdown-nav-list class:list={[className]}>
+    <slot />
+</anim-dropdown-nav-list>
+
+<style>
+    anim-dropdown-nav-list {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2rem;
+        width: fit-content;
+        height: 100%;
+        pointer-events: auto;
+        z-index: 20;
+        padding: 0rem 1rem;
+    }
+</style>

@@ -1,0 +1,583 @@
+---
+export interface SliderItem {
+  type: "project" | "talent";
+  slug: string;
+  name: string;
+  img: string;
+  alt?: string;
+}
+
+export interface Props {
+  items: SliderItem[];
+}
+
+const { items: displayItems } = Astro.props;
+---
+
+<stepped-slider class="stepped-slider-container">
+  <div class="artist_list_w">
+    <div role="list" class="artist_list">
+      {
+        displayItems.map((item) => (
+          <div role="listitem" class={"project_item"}>
+            <div class="tag-home-wrap">
+              <div>{item.name}</div>
+            </div>
+            <a
+              href={`/${item.type === "project" ? "projects" : "talents"}/${item.slug}`}
+              class="media-link"
+            >
+              <img
+                src={item.img}
+                alt={item.alt || ""}
+                loading="lazy"
+                class="media-slider-home"
+              />
+            </a>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</stepped-slider>
+
+<style>
+  .div-block {
+    z-index: 90;
+    -webkit-user-select: none;
+    user-select: none;
+    align-self: flex-start;
+    position: relative;
+  }
+
+  .media-link {
+    z-index: 20;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0%;
+    overflow: hidden;
+  }
+
+  .media-slider-home {
+    object-fit: cover;
+    width: 105%;
+    max-width: none;
+    height: 120%;
+    position: absolute;
+    inset: 0%;
+    transform-origin: center center;
+  }
+
+  .tag-home-wrap {
+    grid-column-gap: 0.5rem;
+    grid-row-gap: 0.5rem;
+    text-transform: uppercase;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: 0.75rem;
+    display: inline-flex;
+    position: absolute;
+    inset: -5% auto auto 0%;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    z-index: 30;
+    white-space: nowrap;
+    transform-origin: left bottom;
+  }
+
+  .home {
+    padding-top: 4rem;
+  }
+
+  @media (max-width: 991px) {
+    stepped-slider.stepped-slider-container {
+      display: block;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 55vh;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding: 1.5rem 1.5rem 2rem 1.5rem;
+      box-sizing: border-box;
+    }
+
+    stepped-slider.stepped-slider-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .artist_list_w {
+      position: relative;
+      inset: auto;
+      width: max-content;
+      height: 100%;
+    }
+
+    .artist_list {
+      display: flex;
+      align-items: flex-end;
+      gap: 1.25rem;
+      height: 100%;
+    }
+
+    .project_item,
+    .artist_item {
+      position: relative !important;
+      bottom: auto !important;
+      left: auto !important;
+      transform: none !important;
+      flex: 0 0 auto;
+      width: 72vw;
+      max-width: 320px;
+      height: 100%;
+      min-height: 22rem;
+      box-sizing: border-box;
+    }
+
+    .media-link {
+      inset: 1.75rem 0% 0% 0% !important;
+      height: calc(100% - 1.75rem) !important;
+    }
+
+    .tag-home-wrap {
+      opacity: 1 !important;
+      inset: 0 auto auto 0 !important;
+    }
+  }
+
+  @media (min-width: 992px) {
+    stepped-slider.stepped-slider-container {
+      display: block;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 75vh;
+      overflow: hidden;
+    }
+
+    .artist_list_w {
+      -webkit-user-select: none;
+      user-select: none;
+      justify-content: flex-start;
+      align-items: flex-end;
+      width: 100%;
+      height: 100%;
+      font-size: 2rem;
+      display: flex;
+      position: absolute;
+      inset: auto 0% 0%;
+    }
+
+    .artist_list {
+      display: flex;
+    }
+
+    .project_item,
+    .artist_item {
+      object-fit: cover;
+      flex: none;
+      align-self: flex-end;
+      width: auto;
+      min-width: 30rem;
+      min-height: 27.5rem;
+      overflow: visible;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      will-change: transform;
+    }
+
+    .tag-home-wrap {
+      opacity: 0;
+      transition: none !important;
+    }
+
+    .project_item:hover .tag-home-wrap,
+    .artist_item:hover .tag-home-wrap {
+      opacity: 1;
+    }
+  }
+</style>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+
+  class SteppedSlider extends HTMLElement {
+    private originalItems: HTMLElement[] = [];
+    private createdClones: HTMLElement[] = [];
+    private items: HTMLElement[] = [];
+    private isMobile = false;
+
+    private currentScroll = 0;
+    private targetScroll = 0;
+    private headX = 0;
+    private headIndex = 0;
+
+    private baseItemWidth = 0;
+    private minWidth = 0;
+
+    private minScale = 0.2;
+    private maxScale = 1.35;
+    private lerpFactor = 0.06;
+    private wheelSensitivity = 0.18;
+    private touchSensitivity = 0.3;
+
+    private touchStartX = 0;
+    private resizeObserver: ResizeObserver | null = null;
+    private resizeTimeout?: ReturnType<typeof setTimeout>;
+
+    constructor() {
+      super();
+
+      this.tickerCallback = this.tickerCallback.bind(this);
+      this.handleResize = this.handleResize.bind(this);
+      this.handleWheel = this.handleWheel.bind(this);
+      this.handleTouchStart = this.handleTouchStart.bind(this);
+      this.handleTouchMove = this.handleTouchMove.bind(this);
+      this.handleMobileScroll = this.handleMobileScroll.bind(this);
+    }
+
+    connectedCallback() {
+      this.originalItems = gsap.utils.toArray<HTMLElement>(
+        ".project_item, .artist_item",
+        this,
+      );
+      if (!this.originalItems.length) return;
+
+      this.updateResponsiveConfig();
+      this.fillTrack();
+
+      this.resizeObserver = new ResizeObserver(() => {
+        clearTimeout(this.resizeTimeout);
+        this.resizeTimeout = setTimeout(this.handleResize, 150);
+      });
+      this.resizeObserver.observe(this);
+
+      this.addEventListener("scroll", this.handleMobileScroll, {
+        passive: true,
+      });
+      window.addEventListener("wheel", this.handleWheel, { passive: true });
+      window.addEventListener("touchstart", this.handleTouchStart, {
+        passive: true,
+      });
+      window.addEventListener("touchmove", this.handleTouchMove, {
+        passive: true,
+      });
+
+      gsap.ticker.add(this.tickerCallback);
+    }
+
+    disconnectedCallback() {
+      gsap.ticker.remove(this.tickerCallback);
+
+      this.resizeObserver?.disconnect();
+      this.resizeObserver = null;
+      clearTimeout(this.resizeTimeout);
+
+      this.removeEventListener("scroll", this.handleMobileScroll);
+      window.removeEventListener("wheel", this.handleWheel);
+      window.removeEventListener("touchstart", this.handleTouchStart);
+      window.removeEventListener("touchmove", this.handleTouchMove);
+
+      this.createdClones.forEach((clone) => clone.remove());
+      this.createdClones = [];
+    }
+
+    private fillTrack() {
+      const list = this.querySelector<HTMLElement>(".artist_list");
+      if (!list || !this.originalItems.length) return;
+
+      this.createdClones.forEach((clone) => clone.remove());
+      this.createdClones = [];
+
+      let setsNeeded = 3;
+
+      if (!this.isMobile) {
+        this.measureBaseWidth();
+        if (this.baseItemWidth > 0) {
+          const singleSetMinWidth =
+            this.originalItems.length * this.baseItemWidth * this.minScale;
+          const targetWidth = window.innerWidth * 2.5;
+          setsNeeded = Math.max(
+            3,
+            Math.ceil(targetWidth / (singleSetMinWidth || 1)) + 1,
+          );
+        }
+      }
+
+      const fragment = document.createDocumentFragment();
+      for (let i = 1; i < setsNeeded; i++) {
+        this.originalItems.forEach((item) => {
+          const clone = item.cloneNode(true) as HTMLElement;
+          clone.setAttribute("aria-hidden", "true");
+
+          delete clone.dataset.hoverBound;
+
+          fragment.appendChild(clone);
+          this.createdClones.push(clone);
+        });
+      }
+      list.appendChild(fragment);
+
+      this.items = gsap.utils.toArray<HTMLElement>(
+        ".project_item, .artist_item",
+        this,
+      );
+      this.setupHoverAnimations();
+    }
+
+    private setupHoverAnimations() {
+      this.items.forEach((item) => {
+        if (item.dataset.hoverBound === "true") return;
+        item.dataset.hoverBound = "true";
+
+        const img = item.querySelector<HTMLElement>(".media-slider-home");
+        const tag = item.querySelector<HTMLElement>(".tag-home-wrap");
+        const tagText = tag?.querySelector<HTMLElement>("div");
+
+        if (tagText && !this.isMobile) {
+          gsap.set(tagText, { y: 6 });
+        }
+
+        item.addEventListener("mouseenter", () => {
+          if (this.isMobile) return;
+
+          if (img) {
+            gsap.to(img, {
+              scale: 1.08,
+              duration: 0.6,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
+
+          if (tag) {
+            gsap.to(tag, {
+              opacity: 1,
+              duration: 0.5,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
+
+          if (tagText) {
+            gsap.to(tagText, {
+              y: 0,
+              duration: 0.5,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
+        });
+
+        item.addEventListener("mouseleave", () => {
+          if (this.isMobile) return;
+
+          if (img) {
+            gsap.to(img, {
+              scale: 1,
+              duration: 0.6,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
+
+          if (tag) {
+            gsap.to(tag, {
+              opacity: 0,
+              duration: 0.4,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
+
+          if (tagText) {
+            gsap.to(tagText, {
+              y: 6,
+              duration: 0.4,
+              ease: "power2.out",
+              overwrite: "auto",
+            });
+          }
+        });
+      });
+    }
+
+    private updateResponsiveConfig() {
+      const vw = window.innerWidth;
+      const wasMobile = this.isMobile;
+
+      this.isMobile = vw < 992;
+
+      if (this.isMobile) {
+        if (!wasMobile) {
+          this.resetForNativeScroll();
+        }
+        return;
+      }
+
+      if (vw <= 1440) {
+        this.minScale = 0.2;
+        this.maxScale = 1.35;
+        this.lerpFactor = 0.06;
+        this.wheelSensitivity = 0.18;
+        this.touchSensitivity = 0.3;
+      } else {
+        this.minScale = 0.25;
+        this.maxScale = 1.5;
+        this.lerpFactor = 0.055;
+        this.wheelSensitivity = 0.2;
+        this.touchSensitivity = 0.3;
+      }
+    }
+
+    private resetForNativeScroll() {
+      this.items.forEach((item) => {
+        gsap.set(item, { clearProps: "all" });
+        const tag = item.querySelector<HTMLElement>(".tag-home-wrap");
+        if (tag) gsap.set(tag, { clearProps: "all" });
+        const img = item.querySelector<HTMLElement>(".media-slider-home");
+        if (img) gsap.set(img, { clearProps: "all" });
+      });
+
+      requestAnimationFrame(() => {
+        const totalSets = Math.max(
+          1,
+          1 + this.createdClones.length / this.originalItems.length,
+        );
+        const singleSetWidth = this.scrollWidth / totalSets;
+        if (singleSetWidth > 0) {
+          this.scrollLeft = singleSetWidth;
+        }
+      });
+    }
+
+    private handleMobileScroll() {
+      if (!this.isMobile) return;
+
+      const totalSets = Math.max(
+        1,
+        1 + this.createdClones.length / this.originalItems.length,
+      );
+      const singleSetWidth = this.scrollWidth / totalSets;
+      if (singleSetWidth <= 0) return;
+
+      if (this.scrollLeft >= singleSetWidth * (totalSets - 1)) {
+        this.scrollLeft -= singleSetWidth;
+      } else if (this.scrollLeft <= 5) {
+        this.scrollLeft += singleSetWidth;
+      }
+    }
+
+    private measureBaseWidth() {
+      if (!this.originalItems.length || this.isMobile) return;
+      const first = this.originalItems[0];
+
+      const prevTransform = first.style.transform;
+      const prevScale = first.style.scale;
+      const prevDisplay = first.style.display;
+
+      first.style.display = "block";
+      first.style.transform = "none";
+      first.style.scale = "1";
+
+      this.baseItemWidth = first.getBoundingClientRect().width;
+      this.minWidth = this.baseItemWidth * this.minScale;
+
+      first.style.transform = prevTransform;
+      first.style.scale = prevScale;
+      first.style.display = prevDisplay;
+    }
+
+    private handleResize() {
+      this.updateResponsiveConfig();
+      this.fillTrack();
+    }
+
+    private handleWheel(e: WheelEvent) {
+      if (this.isMobile) return;
+      this.targetScroll += (e.deltaY || e.deltaX) * this.wheelSensitivity;
+    }
+
+    private handleTouchStart(e: TouchEvent) {
+      if (this.isMobile) return;
+      this.touchStartX = e.touches[0].clientX;
+    }
+
+    private handleTouchMove(e: TouchEvent) {
+      if (this.isMobile) return;
+      const touchCurrentX = e.touches[0].clientX;
+      const deltaX = this.touchStartX - touchCurrentX;
+      this.targetScroll += deltaX * this.touchSensitivity;
+      this.touchStartX = touchCurrentX;
+    }
+
+    private getScale(x: number) {
+      const vw = window.innerWidth;
+      const progress = gsap.utils.clamp(0, 1, x / vw);
+      return gsap.utils.mapRange(0, 1, this.minScale, this.maxScale, progress);
+    }
+
+    private tickerCallback() {
+      if (this.isMobile || this.minWidth <= 0 || !this.items.length) return;
+
+      const diff = this.targetScroll - this.currentScroll;
+      if (Math.abs(diff) < 0.001) {
+        this.currentScroll = this.targetScroll;
+      }
+
+      const delta = (this.targetScroll - this.currentScroll) * this.lerpFactor;
+      this.currentScroll += delta;
+      this.headX -= delta;
+
+      while (this.headX < -this.minWidth) {
+        this.headX += this.minWidth;
+        this.headIndex = (this.headIndex + 1) % this.items.length;
+      }
+      while (this.headX > 0) {
+        this.headIndex =
+          (this.headIndex - 1 + this.items.length) % this.items.length;
+        this.headX -= this.minWidth;
+      }
+
+      let posX = this.headX;
+      let i = 0;
+
+      this.items.forEach((item) => gsap.set(item, { display: "none" }));
+
+      while (posX < window.innerWidth && i < this.items.length) {
+        const itemIdx = (this.headIndex + i) % this.items.length;
+        const item = this.items[itemIdx];
+        const scale = this.getScale(posX);
+
+        gsap.set(item, {
+          display: "block",
+          x: posX,
+          scale: scale,
+          transformOrigin: "left bottom",
+          zIndex: Math.round(scale * 100),
+        });
+
+        const tag = item.querySelector<HTMLElement>(".tag-home-wrap");
+        if (tag) {
+          gsap.set(tag, {
+            scale: 1 / scale,
+            transformOrigin: "left bottom",
+          });
+        }
+
+        posX += this.baseItemWidth * scale;
+        i++;
+      }
+    }
+  }
+
+  if (!customElements.get("stepped-slider")) {
+    customElements.define("stepped-slider", SteppedSlider);
+  }
+</script>

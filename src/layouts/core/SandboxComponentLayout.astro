@@ -1,0 +1,137 @@
+---
+import { Image } from "astro:assets";
+import type { CollectionEntry } from "astro:content";
+import { Icon } from "astro-icon/components";
+import authorImage from "@/assets/author.png";
+import FormattedDate from "@/components/FormattedDate.astro";
+import InteractiveIframe from "@/components/sandbox/InteractiveIframe.astro";
+import PageLayout from "./PageLayout.astro";
+
+type Props = {
+    data: CollectionEntry<"sandboxComponents">["data"];
+};
+
+const { data } = Astro.props;
+const {
+    title,
+    subtitle,
+    tags,
+    description = "",
+    cover,
+    coverAlt,
+    pubDate,
+    lastUpdated,
+    iframeUrl,
+    src,
+    preview,
+} = data;
+
+const displayImage = cover || preview?.image_src;
+const displayVideo = preview?.video_src;
+---
+
+<PageLayout title={title} description={description}>
+    <article class="my-(--header-height) flex flex-col gap-8">
+        <header class="flex flex-col gap-4 typeset typeset-docs">
+            <div class="flex flex-col gap-2">
+                <h1 class="lg:text-5xl lg:leading-tight mt-4 font-medium">
+                    {title}
+                </h1>
+                {subtitle && <span>{subtitle}</span>}
+            </div>
+
+            <div
+                class="flex flex-row items-center justify-between text-sm text-muted-foreground"
+            >
+                <div class="flex items-center gap-2">
+                    <Image
+                        src={authorImage}
+                        alt="Sankalpa Adhikari"
+                        width={32}
+                        height={32}
+                        class="h-8 w-8 rounded-full object-cover border border-border mt-0"
+                    />
+                    <span class="text-foreground">Sankalpa Adhikari</span>
+                </div>
+                <div class="flex flex-row flex-wrap items-center gap-3">
+                    <span class="flex flex-row items-center gap-2">
+                        <Icon
+                            name={"heroicons:calendar-date-range"}
+                            class={"size-3.5"}
+                        />
+                        <FormattedDate date={pubDate} />
+                    </span>
+                    {
+                        lastUpdated && (
+                            <span class="flex flex-row items-center gap-2">
+                                <Icon
+                                    name={"heroicons:arrows-up-down"}
+                                    class={"size-3.5"}
+                                />
+                                <FormattedDate date={lastUpdated} />
+                            </span>
+                        )
+                    }
+                </div>
+            </div>
+
+            {
+                tags && tags.length > 0 && (
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                        {tags.map((tag) => (
+                            <span class="rounded-full bg-tertiary px-2.5 py-1 font-mono text-xs uppercase tracking-wide text-tertiary-foreground">
+                                {tag}
+                            </span>
+                        ))}
+                    </div>
+                )
+            }
+        </header>
+
+        {
+            iframeUrl && (
+                <div class="w-full my-2">
+                    <InteractiveIframe src={iframeUrl} />
+                </div>
+            )
+        }
+
+        {
+            !iframeUrl && displayVideo ? (
+                <div class="w-full overflow-hidden rounded-2xl">
+                    <video
+                        src={displayVideo}
+                        controls
+                        autoplay
+                        loop
+                        muted
+                        class="w-full rounded-2xl"
+                    />
+                </div>
+            ) : !iframeUrl && displayImage ? (
+                <div class="w-full">
+                    {typeof displayImage === "string" ? (
+                        <img
+                            src={displayImage}
+                            alt={coverAlt || title}
+                            class="w-full rounded-2xl object-cover"
+                        />
+                    ) : (
+                        <Image
+                            src={displayImage}
+                            alt={coverAlt || title}
+                            loading="eager"
+                            decoding="async"
+                            class="w-full rounded-2xl object-cover"
+                        />
+                    )}
+                </div>
+            ) : null
+        }
+
+        {/* 3. Page Content */}
+        <div class="typeset typeset-docs max-w-none">
+            <slot />
+        </div>
+    </article>
+</PageLayout>

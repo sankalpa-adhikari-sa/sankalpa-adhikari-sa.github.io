@@ -1,0 +1,235 @@
+---
+export interface Props {
+    items?: string[];
+    speed?: number;
+    direction?: "left" | "right";
+    pauseOnHover?: boolean;
+}
+
+const {
+    items = [
+        'use code "FIRSTORDER" for free shipping',
+        "bundle & save up to 20%",
+        "Hello world",
+    ],
+    speed = 1,
+    direction = "left",
+    pauseOnHover = false,
+} = Astro.props;
+---
+
+<anm-marquee
+    class="announcement-ribbon"
+    data-speed={speed}
+    data-direction={direction}
+    data-pause-on-hover={String(pauseOnHover)}
+>
+    <p class="sr-only">{items.join(" — ")}</p>
+
+    <div class="announcement-ribbon-items" aria-hidden="true">
+        {items.map((item) => <p class="announcement-item">{item}</p>)}
+    </div>
+</anm-marquee>
+
+<style>
+    anm-marquee.announcement-ribbon {
+        display: block;
+        z-index: 3;
+        position: relative;
+        overflow: hidden;
+        font-size: 1.4rem;
+        letter-spacing: -0.014rem;
+        line-height: 1.4rem;
+        background-color: var(--dark, #000);
+        white-space: nowrap;
+    }
+    .announcement-ribbon-items {
+        display: inline-flex;
+        padding: 1.2rem 0;
+        color: white;
+        will-change: transform;
+    }
+    .announcement-item {
+        margin: 0;
+        padding: 0 2rem;
+        display: inline-block;
+    }
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+</style>
+
+<script>
+    import { gsap } from "@/utils/gsap-init";
+
+    class AnmMarquee extends HTMLElement {
+        private track: HTMLElement | null;
+        private originalItems: Element[];
+        private createdClones: Element[] = [];
+        private currentX = 0;
+        private setWidth = 0;
+        private isPaused = false;
+        private resizeObserver: ResizeObserver | null = null;
+        private resizeTimeout?: ReturnType<typeof setTimeout>;
+        private reducedMotionQuery: MediaQueryList;
+
+        private speed: number;
+        private direction: "left" | "right";
+        private pauseOnHover: boolean;
+
+        constructor() {
+            super();
+            this.track = this.querySelector(".announcement-ribbon-items");
+            this.originalItems = this.track
+                ? Array.from(this.track.children)
+                : [];
+
+            this.speed = parseFloat(this.dataset.speed || "1") || 1;
+            this.direction =
+                this.dataset.direction === "right" ? "right" : "left";
+            this.pauseOnHover = this.dataset.pauseOnHover === "true";
+
+            this.reducedMotionQuery = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            );
+
+            this.tickerCallback = this.tickerCallback.bind(this);
+            this.handleResize = this.handleResize.bind(this);
+            this.handleMouseEnter = this.handleMouseEnter.bind(this);
+            this.handleMouseLeave = this.handleMouseLeave.bind(this);
+            this.handleReducedMotionChange =
+                this.handleReducedMotionChange.bind(this);
+        }
+
+        connectedCallback() {
+            if (!this.track || this.originalItems.length === 0) return;
+
+            this.reducedMotionQuery.addEventListener(
+                "change",
+                this.handleReducedMotionChange,
+            );
+
+            if (this.reducedMotionQuery.matches) return;
+
+            this.start();
+        }
+
+        disconnectedCallback() {
+            this.stop();
+            this.reducedMotionQuery.removeEventListener(
+                "change",
+                this.handleReducedMotionChange,
+            );
+        }
+
+        private start() {
+            if (!this.track) return;
+
+            this.fillTrack();
+
+            this.resizeObserver = new ResizeObserver(() => this.handleResize());
+            this.resizeObserver.observe(this);
+
+            gsap.ticker.add(this.tickerCallback);
+
+            if (this.pauseOnHover) {
+                this.addEventListener("mouseenter", this.handleMouseEnter);
+                this.addEventListener("mouseleave", this.handleMouseLeave);
+            }
+        }
+
+        private stop() {
+            gsap.ticker.remove(this.tickerCallback);
+            this.resizeObserver?.disconnect();
+            this.resizeObserver = null;
+            clearTimeout(this.resizeTimeout);
+
+            if (this.pauseOnHover) {
+                this.removeEventListener("mouseenter", this.handleMouseEnter);
+                this.removeEventListener("mouseleave", this.handleMouseLeave);
+            }
+
+            if (this.track) gsap.set(this.track, { clearProps: "x" });
+            this.createdClones.forEach((clone) => clone.remove());
+            this.createdClones = [];
+            this.currentX = 0;
+            this.setWidth = 0;
+        }
+
+        private handleReducedMotionChange(e: MediaQueryListEvent) {
+            if (e.matches) {
+                this.stop();
+            } else {
+                this.start();
+            }
+        }
+
+        private fillTrack() {
+            if (!this.track) return;
+
+            this.createdClones.forEach((clone) => clone.remove());
+            this.createdClones = [];
+
+            this.setWidth = this.track.scrollWidth;
+            if (this.setWidth === 0) return;
+
+            const setsNeeded = Math.max(
+                2,
+                Math.ceil((window.innerWidth * 2) / this.setWidth) + 1,
+            );
+            const fragment = document.createDocumentFragment();
+
+            for (let i = 1; i < setsNeeded; i++) {
+                this.originalItems.forEach((item) => {
+                    const clone = item.cloneNode(true) as Element;
+                    clone.setAttribute("aria-hidden", "true");
+                    fragment.appendChild(clone);
+                    this.createdClones.push(clone);
+                });
+            }
+            this.track.appendChild(fragment);
+        }
+
+        private tickerCallback(_time: number, deltaMS: number) {
+            if (!this.track || this.isPaused || this.setWidth === 0) return;
+
+            const baseSpeed =
+                this.direction === "right" ? this.speed : -this.speed;
+            const frameAdjustedSpeed = baseSpeed * (deltaMS / (1000 / 60));
+
+            this.currentX += frameAdjustedSpeed;
+
+            if (this.direction === "left" && this.currentX <= -this.setWidth) {
+                this.currentX += this.setWidth;
+            } else if (this.direction === "right" && this.currentX >= 0) {
+                this.currentX -= this.setWidth;
+            }
+
+            gsap.set(this.track, { x: this.currentX });
+        }
+
+        private handleResize() {
+            clearTimeout(this.resizeTimeout);
+            this.resizeTimeout = setTimeout(() => this.fillTrack(), 150);
+        }
+
+        private handleMouseEnter() {
+            this.isPaused = true;
+        }
+        private handleMouseLeave() {
+            this.isPaused = false;
+        }
+    }
+
+    if (!customElements.get("anm-marquee")) {
+        customElements.define("anm-marquee", AnmMarquee);
+    }
+</script>

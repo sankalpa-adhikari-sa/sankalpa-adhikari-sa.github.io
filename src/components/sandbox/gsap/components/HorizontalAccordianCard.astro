@@ -1,0 +1,535 @@
+---
+import { Image } from "astro:assets";
+
+export type BorderRadiusChoice = "none" | "sm" | "md" | "lg";
+
+export interface AccordionItem {
+    title: string;
+    description?: string;
+    tag?: string;
+    image?: string | ImageMetadata;
+    video?: string;
+    link?: string;
+}
+
+export interface Props {
+    items: AccordionItem[];
+    borderRadius?: BorderRadiusChoice;
+    duration?: number;
+    ease?: string;
+    activeFlex?: number;
+}
+
+const {
+    items = [],
+    borderRadius = "md",
+    duration = 0.5,
+    ease = "power2.out",
+    activeFlex = 3.5,
+} = Astro.props;
+
+const radiusMap: Record<BorderRadiusChoice, string> = {
+    none: "0px",
+    sm: "8px",
+    md: "16px",
+    lg: "24px",
+};
+
+const currentRadius = radiusMap[borderRadius] || radiusMap.md;
+---
+
+<anm-accordion
+    class="accordion-grid"
+    data-duration={duration}
+    data-ease={ease}
+    data-active-flex={activeFlex}
+    style={`--accordion-border-radius: ${currentRadius};`}
+>
+    {
+        items.map((item, index) => {
+            const Tag = item.link ? "a" : "div";
+            const elementProps = item.link ? { href: item.link } : {};
+            return (
+                <Tag
+                    {...elementProps}
+                    class={`accordion-card ${index === 0 ? "active" : ""}`}
+                >
+                    <div class="card-media-wrapper">
+                        {item.video ? (
+                            <video
+                                src={item.video}
+                                poster={
+                                    typeof item.image === "string"
+                                        ? item.image
+                                        : item.image?.src
+                                }
+                                class="card-media card-video"
+                                muted
+                                loop
+                                playsinline
+                                preload="auto"
+                            />
+                        ) : item.image ? (
+                            typeof item.image === "string" ? (
+                                <Image
+                                    src={item.image}
+                                    alt={item.title}
+                                    width={800}
+                                    height={1200}
+                                    class="card-media"
+                                />
+                            ) : (
+                                <Image
+                                    src={item.image}
+                                    alt={item.title}
+                                    class="card-media"
+                                />
+                            )
+                        ) : null}
+                    </div>
+
+                    <div class="card-overlay">
+                        {item.tag && <span class="card-tag">{item.tag}</span>}
+                        <div class="card-content">
+                            <h3 class="card-title">{item.title}</h3>
+                            {item.description && (
+                                <p class="card-description">
+                                    {item.description}
+                                </p>
+                            )}
+                            {item.link && (
+                                <div class="split-line">
+                                    <span class="read-more">Read more</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </Tag>
+            );
+        })
+    }
+</anm-accordion>
+
+<style>
+    anm-accordion.accordion-grid {
+        display: flex;
+        gap: 1.25rem;
+        width: calc(100% - 4rem);
+        max-width: 100%;
+        margin: 2rem auto;
+        height: 600px;
+    }
+
+    .accordion-card {
+        position: relative;
+        flex: 1;
+        overflow: hidden;
+        cursor: pointer;
+        text-decoration: none;
+        border-radius: var(--accordion-border-radius);
+        min-width: 0;
+        will-change: flex-grow;
+        isolation: isolate;
+    }
+
+    .card-media-wrapper {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    .card-media {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        pointer-events: none;
+        transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+        transform: translate3d(0, 0, 0) scale(1);
+    }
+
+    .accordion-card:hover .card-media {
+        transform: translate3d(0, 0, 0) scale(1.05);
+    }
+
+    .card-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+            0deg,
+            rgba(0, 0, 0, 0.85) 0%,
+            rgba(0, 0, 0, 0.3) 40%,
+            rgba(0, 0, 0, 0) 100%
+        );
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding: 2rem;
+        color: #ffffff;
+        z-index: 10;
+        transform: translateZ(10px);
+        backface-visibility: hidden;
+        -webkit-backface-visibility: hidden;
+    }
+
+    .card-tag {
+        align-self: flex-end;
+        margin-bottom: auto;
+        padding: 0.5rem 1rem;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        border-radius: var(--accordion-border-radius);
+
+        font-size: 0.75rem;
+        font-weight: 500;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .card-content {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: 320px;
+        max-width: calc(100vw - 8rem);
+    }
+
+    .card-title {
+        font-size: 1.75rem;
+        font-weight: 600;
+        line-height: 1.2;
+    }
+
+    .card-description {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #c6c6c6;
+    }
+
+    .read-more {
+        display: inline-block;
+        font-size: 0.95rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+        color: #ffffff;
+        will-change: transform, opacity;
+        transition: color 0.3s ease;
+    }
+
+    .read-more:hover {
+        color: #c6c6c6;
+    }
+
+    :global(.split-line) {
+        overflow: hidden;
+    }
+
+    :global(.split-word) {
+        display: inline-block;
+        will-change: transform, opacity;
+    }
+
+    @media (max-width: 800px) {
+        anm-accordion.accordion-grid {
+            flex-direction: column;
+            height: auto;
+            width: calc(100% - 2rem);
+            margin: 1rem auto;
+        }
+
+        .accordion-card {
+            flex: none !important;
+            height: 350px;
+            width: 100%;
+        }
+
+        .card-content {
+            width: 100%;
+        }
+
+        .card-overlay {
+            opacity: 1 !important;
+        }
+
+        :global(.split-word),
+        .read-more {
+            transform: translateY(0) !important;
+            opacity: 1 !important;
+        }
+    }
+</style>
+
+<script>
+    import { gsap, SplitText } from "@/utils/gsap-init";
+
+    interface CardSplitData {
+        titleWords: HTMLElement[];
+        descWords: HTMLElement[];
+    }
+
+    class AnmAccordion extends HTMLElement {
+        private cards: HTMLElement[] = [];
+        private cardSplits = new Map<HTMLElement, CardSplitData>();
+        private matchMedia: gsap.MatchMedia | null = null;
+        private mobileObserver: IntersectionObserver | null = null;
+
+        private duration: number;
+        private ease: string;
+        private activeFlex: number;
+
+        constructor() {
+            super();
+            this.duration = parseFloat(this.dataset.duration || "0.5") || 0.5;
+            this.ease = this.dataset.ease || "power2.out";
+            this.activeFlex =
+                parseFloat(this.dataset.activeFlex || "3.5") || 3.5;
+        }
+
+        connectedCallback() {
+            this.cards = Array.from(
+                this.querySelectorAll<HTMLElement>(".accordion-card"),
+            );
+            if (this.cards.length === 0) return;
+
+            this.matchMedia = gsap.matchMedia();
+
+            this.matchMedia.add("(min-width: 801px)", () => {
+                if (document.fonts) {
+                    document.fonts.ready.then(() => this.initDesktop());
+                } else {
+                    this.initDesktop();
+                }
+            });
+
+            this.matchMedia.add("(max-width: 800px)", () => {
+                this.initMobile();
+                return () => this.cleanupMobile();
+            });
+        }
+
+        disconnectedCallback() {
+            this.matchMedia?.revert();
+            this.cleanupMobile();
+            this.cardSplits.clear();
+        }
+
+        private initDesktop() {
+            this.cards.forEach((card) => {
+                const title = card.querySelector(".card-title");
+                const desc = card.querySelector(".card-description");
+                const readMore = card.querySelector(".read-more");
+                const tag = card.querySelector(".card-tag");
+                const overlay = card.querySelector(".card-overlay");
+                const video =
+                    card.querySelector<HTMLVideoElement>("video.card-video");
+
+                if (!title) return;
+
+                const titleSplit = new SplitText(title, {
+                    type: "lines, words",
+                    linesClass: "split-line",
+                    wordsClass: "split-word",
+                });
+
+                let descSplitWords: HTMLElement[] = [];
+                if (desc) {
+                    const descSplit = new SplitText(desc, {
+                        type: "lines, words",
+                        linesClass: "split-line",
+                        wordsClass: "split-word",
+                    });
+                    descSplitWords = descSplit.words as HTMLElement[];
+                }
+
+                // Add "Read more" to the description words so it animates with them
+                if (readMore) {
+                    descSplitWords.push(readMore as HTMLElement);
+                }
+
+                const titleSplitWords = titleSplit.words as HTMLElement[];
+
+                this.cardSplits.set(card, {
+                    titleWords: titleSplitWords,
+                    descWords: descSplitWords,
+                });
+
+                const allWords = [...titleSplitWords, ...descSplitWords];
+
+                if (card.classList.contains("active")) {
+                    gsap.set(card, { flexGrow: this.activeFlex });
+                    gsap.set(overlay, { opacity: 1 });
+                    if (tag) gsap.set(tag, { y: 0, opacity: 1 });
+                    gsap.set(allWords, { yPercent: 0, opacity: 1 });
+                    if (video) video.play().catch(() => {});
+                } else {
+                    gsap.set(card, { flexGrow: 1 });
+                    gsap.set(overlay, { opacity: 0 });
+                    if (tag) gsap.set(tag, { y: 15, opacity: 0 });
+                    gsap.set(allWords, { yPercent: 120, opacity: 0 });
+                    if (video) video.pause();
+                }
+
+                card.addEventListener("mouseenter", () =>
+                    this.switchAccordion(card),
+                );
+                card.addEventListener("click", () =>
+                    this.switchAccordion(card),
+                );
+            });
+        }
+
+        private switchAccordion(targetCard: HTMLElement) {
+            if (targetCard.classList.contains("active")) return;
+
+            this.cards.forEach((card) => card.classList.remove("active"));
+            targetCard.classList.add("active");
+
+            this.cards.forEach((card) => {
+                const overlay = card.querySelector(".card-overlay");
+                const tag = card.querySelector(".card-tag");
+                const splits = this.cardSplits.get(card);
+                const video =
+                    card.querySelector<HTMLVideoElement>("video.card-video");
+
+                if (card === targetCard) {
+                    if (video) video.play().catch(() => {});
+
+                    gsap.to(card, {
+                        flexGrow: this.activeFlex,
+                        duration: this.duration,
+                        ease: this.ease,
+                        overwrite: "auto",
+                    });
+                    gsap.to(overlay, {
+                        opacity: 1,
+                        duration: this.duration * 0.8,
+                        ease: this.ease,
+                        overwrite: "auto",
+                    });
+
+                    if (tag) {
+                        gsap.to(tag, {
+                            y: 0,
+                            opacity: 1,
+                            duration: this.duration * 0.6,
+                            ease: this.ease,
+                            delay: 0.05,
+                            overwrite: "auto",
+                        });
+                    }
+
+                    if (splits) {
+                        if (splits.titleWords.length > 0) {
+                            gsap.to(splits.titleWords, {
+                                yPercent: 0,
+                                opacity: 1,
+                                duration: this.duration,
+                                stagger: 0.05,
+                                ease: "power3.out",
+                                overwrite: "auto",
+                                delay: 0.1,
+                            });
+                        }
+
+                        if (splits.descWords.length > 0) {
+                            gsap.to(splits.descWords, {
+                                yPercent: 0,
+                                opacity: 1,
+                                duration: this.duration * 0.8,
+                                stagger: 0.02,
+                                ease: "power3.out",
+                                overwrite: "auto",
+                                delay: 0.2,
+                            });
+                        }
+                    }
+                } else {
+                    if (video) video.pause();
+
+                    gsap.to(card, {
+                        flexGrow: 1,
+                        duration: this.duration,
+                        ease: this.ease,
+                        overwrite: "auto",
+                    });
+                    gsap.to(overlay, {
+                        opacity: 0,
+                        duration: this.duration * 0.6,
+                        ease: this.ease,
+                        overwrite: "auto",
+                    });
+
+                    if (tag) {
+                        gsap.to(tag, {
+                            y: 15,
+                            opacity: 0,
+                            duration: this.duration * 0.4,
+                            ease: "power2.in",
+                            overwrite: "auto",
+                        });
+                    }
+
+                    if (splits) {
+                        const allWords = [
+                            ...splits.titleWords,
+                            ...splits.descWords,
+                        ];
+                        if (allWords.length > 0) {
+                            gsap.to(allWords, {
+                                yPercent: 120,
+                                opacity: 0,
+                                duration: this.duration * 0.4,
+                                ease: "power2.in",
+                                overwrite: "auto",
+                            });
+                        }
+                    }
+                }
+            });
+        }
+
+        private initMobile() {
+            const mobileVideos =
+                this.querySelectorAll<HTMLVideoElement>("video.card-video");
+
+            this.mobileObserver = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        const video = entry.target as HTMLVideoElement;
+                        if (entry.isIntersecting) {
+                            video.play().catch(() => {});
+                        } else {
+                            video.pause();
+                        }
+                    });
+                },
+                { threshold: 0.5 },
+            );
+
+            mobileVideos.forEach((video) =>
+                this.mobileObserver?.observe(video),
+            );
+        }
+
+        private cleanupMobile() {
+            if (this.mobileObserver) {
+                this.mobileObserver.disconnect();
+                this.mobileObserver = null;
+            }
+        }
+    }
+
+    if (!customElements.get("anm-accordion")) {
+        customElements.define("anm-accordion", AnmAccordion);
+    }
+</script>

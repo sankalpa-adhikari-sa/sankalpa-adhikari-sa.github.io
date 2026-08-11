@@ -1,0 +1,35 @@
+---
+import LogoSvg from "../happily/components/logo.svg";
+import "./styles.css";
+import AnimDropdownNav from "./components/AnimDropdownNav.astro";
+import AnnouncementRibbon from "./components/AnnouncementRIbbon.astro";
+---
+
+<header class="header" data-color="light">
+  <AnnouncementRibbon pauseOnHover direction="right" />
+  <a class="header-logo" aria-label="header logo" href="#">
+    <LogoSvg />
+  </a>
+
+  <AnimDropdownNav duration={0.3} />
+</header>
+
+<style>
+  .header {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+  .header-logo {
+    position: absolute;
+    left: 2rem;
+    top: 4.9rem;
+    z-index: 1;
+    width: calc(100vw - 4rem);
+    color: var(--light);
+  }
+</style>

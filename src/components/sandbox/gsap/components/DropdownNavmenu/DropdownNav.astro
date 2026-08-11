@@ -1,0 +1,349 @@
+---
+export interface Props {
+    duration?: number;
+    class?: string;
+}
+
+const { duration = 0.4, class: className } = Astro.props;
+---
+
+<anim-dropdown-nav
+    data-duration={duration}
+    class:list={["nav-wrapper", className]}
+>
+    <slot />
+</anim-dropdown-nav>
+
+<style>
+    anim-dropdown-nav {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 20;
+        pointer-events: auto;
+        padding: 0.25rem 0;
+        font-size: 1rem;
+        height: 2rem;
+    }
+
+    /* Built by the custom element at runtime (see script below), so it
+       can't rely on Astro's build-time scoping — kept global on purpose. */
+    :global(.dropdown-wrapper) {
+        position: absolute;
+        background-color: var(--light);
+        color: var(--dark);
+        top: 0;
+        left: 0;
+        display: block;
+        width: 100vw;
+        height: 0;
+        z-index: 1;
+        overflow: hidden;
+        border-radius: 0 0 1rem 1rem;
+        pointer-events: none;
+    }
+</style>
+
+<script>
+    import { gsap } from "@/utils/gsap-init";
+
+    const OPEN_HEIGHT = "30vh";
+    const CLOSE_DELAY_MS = 150;
+
+    class AnmDropdownNav extends HTMLElement {
+        private triggers: HTMLElement[] = [];
+        private contents: HTMLElement[] = [];
+        private wrapper: HTMLElement | null = null;
+        private activeValue: string | null = null;
+        private duration: number;
+        private closeTimeout: ReturnType<typeof setTimeout> | null = null;
+        private resizeRaf: number | null = null;
+
+        constructor() {
+            super();
+            this.duration = parseFloat(this.dataset.duration || "0.3");
+            this.handleTriggerEnter = this.handleTriggerEnter.bind(this);
+            this.handleTriggerClick = this.handleTriggerClick.bind(this);
+            this.handleMouseLeave = this.handleMouseLeave.bind(this);
+            this.handleDropdownEnter = this.handleDropdownEnter.bind(this);
+            this.handleFocusOut = this.handleFocusOut.bind(this);
+            this.handleKeydown = this.handleKeydown.bind(this);
+            this.handleDocumentClick = this.handleDocumentClick.bind(this);
+            this.handleResize = this.handleResize.bind(this);
+            this.updatePosition = this.updatePosition.bind(this);
+        }
+
+        connectedCallback() {
+            this.triggers = Array.from(
+                this.querySelectorAll("anim-dropdown-nav-trigger"),
+            );
+            this.contents = Array.from(
+                this.querySelectorAll("anim-dropdown-nav-content"),
+            );
+
+            let wrapper = this.querySelector<HTMLElement>(
+                ":scope > .dropdown-wrapper",
+            );
+            if (!wrapper) {
+                wrapper = document.createElement("div");
+                wrapper.className = "dropdown-wrapper";
+                this.appendChild(wrapper);
+            }
+            this.wrapper = wrapper;
+
+            this.contents.forEach((content) => {
+                this.wrapper!.appendChild(content);
+            });
+
+            this.triggers.forEach((trigger) => {
+                trigger.addEventListener("mouseenter", this.handleTriggerEnter);
+                trigger.addEventListener("focusin", this.handleTriggerEnter);
+                trigger.addEventListener("click", this.handleTriggerClick);
+            });
+
+            if (this.wrapper) {
+                this.wrapper.addEventListener(
+                    "mouseenter",
+                    this.handleDropdownEnter,
+                );
+            }
+
+            this.addEventListener("mouseleave", this.handleMouseLeave);
+            this.addEventListener("focusout", this.handleFocusOut);
+            this.addEventListener("keydown", this.handleKeydown);
+            document.addEventListener("click", this.handleDocumentClick);
+            window.addEventListener("resize", this.handleResize);
+
+            this.updatePosition();
+        }
+
+        disconnectedCallback() {
+            this.clearCloseTimeout();
+            if (this.resizeRaf) {
+                cancelAnimationFrame(this.resizeRaf);
+                this.resizeRaf = null;
+            }
+
+            this.triggers.forEach((trigger) => {
+                trigger.removeEventListener(
+                    "mouseenter",
+                    this.handleTriggerEnter,
+                );
+                trigger.removeEventListener("focusin", this.handleTriggerEnter);
+                trigger.removeEventListener("click", this.handleTriggerClick);
+            });
+
+            if (this.wrapper) {
+                this.wrapper.removeEventListener(
+                    "mouseenter",
+                    this.handleDropdownEnter,
+                );
+            }
+
+            this.removeEventListener("mouseleave", this.handleMouseLeave);
+            this.removeEventListener("focusout", this.handleFocusOut);
+            this.removeEventListener("keydown", this.handleKeydown);
+            document.removeEventListener("click", this.handleDocumentClick);
+            window.removeEventListener("resize", this.handleResize);
+        }
+
+        private updatePosition() {
+            if (!this.wrapper) return;
+            const rect = this.getBoundingClientRect();
+            this.wrapper.style.left = `-${rect.left}px`;
+            this.wrapper.style.top = `0px`;
+            this.wrapper.style.width = `100vw`;
+        }
+
+        private handleResize() {
+            if (this.resizeRaf) cancelAnimationFrame(this.resizeRaf);
+            this.resizeRaf = requestAnimationFrame(() => {
+                this.updatePosition();
+                this.resizeRaf = null;
+            });
+        }
+
+        private handleTriggerEnter(e: Event) {
+            this.clearCloseTimeout();
+            const trigger = e.currentTarget as HTMLElement;
+            const value = trigger.dataset.value;
+
+            if (value) {
+                this.open(value);
+            } else {
+                this.close();
+            }
+        }
+
+        private handleTriggerClick(e: Event) {
+            const trigger = e.currentTarget as HTMLElement;
+            const value = trigger.dataset.value;
+            if (!value) return;
+
+            this.clearCloseTimeout();
+            if (this.activeValue === value) {
+                this.close();
+            } else {
+                this.open(value);
+            }
+        }
+
+        private handleDropdownEnter() {
+            this.clearCloseTimeout();
+        }
+
+        private handleMouseLeave() {
+            this.closeTimeout = setTimeout(() => {
+                this.close();
+            }, CLOSE_DELAY_MS);
+        }
+
+        private handleFocusOut(e: FocusEvent) {
+            const next = e.relatedTarget as Node | null;
+            if (!next || !this.contains(next)) {
+                this.close();
+            }
+        }
+
+        private handleKeydown(e: KeyboardEvent) {
+            if (e.key === "Escape" && this.activeValue) {
+                this.close();
+            }
+        }
+
+        private handleDocumentClick(e: MouseEvent) {
+            if (!this.contains(e.target as Node)) {
+                this.close();
+            }
+        }
+
+        private clearCloseTimeout() {
+            if (this.closeTimeout) {
+                clearTimeout(this.closeTimeout);
+                this.closeTimeout = null;
+            }
+        }
+
+        private setTriggerExpanded(trigger: HTMLElement, expanded: boolean) {
+            const link =
+                trigger.querySelector<HTMLAnchorElement>(".nav-items-link");
+            if (link && trigger.dataset.value) {
+                link.setAttribute("aria-expanded", String(expanded));
+            }
+        }
+
+        private open(value: string) {
+            this.updatePosition();
+            const isFirstOpen = !this.activeValue;
+
+            if (this.activeValue === value) return;
+            this.classList.add("is-open");
+
+            const nextContent = this.contents.find(
+                (el) => el.dataset.value === value,
+            );
+            if (!nextContent) return;
+
+            if (isFirstOpen && this.wrapper) {
+                this.wrapper.style.pointerEvents = "auto";
+                gsap.killTweensOf(this.wrapper);
+                gsap.to(this.wrapper, {
+                    height: OPEN_HEIGHT,
+                    duration: this.duration,
+                    ease: "power2.out",
+                });
+            }
+
+            if (this.activeValue) {
+                const currentContent = this.contents.find(
+                    (el) => el.dataset.value === this.activeValue,
+                );
+                if (currentContent) {
+                    gsap.killTweensOf(currentContent);
+                    currentContent.classList.remove("is-active");
+                    gsap.set(currentContent, { visibility: "hidden" });
+                }
+            }
+
+            this.triggers.forEach((trig) => {
+                const isActive = trig.dataset.value === value;
+                trig.classList.toggle("is-active", isActive);
+                this.setTriggerExpanded(trig, isActive);
+                const chevron = trig.querySelector(".chevron");
+                if (chevron) {
+                    gsap.to(chevron, {
+                        rotate: isActive ? 180 : 0,
+                        duration: this.duration,
+                        ease: "power2.out",
+                    });
+                }
+            });
+
+            this.activeValue = value;
+            nextContent.classList.add("is-active");
+
+            gsap.killTweensOf(nextContent);
+            gsap.fromTo(
+                nextContent,
+                { y: 12, visibility: "visible" },
+                {
+                    y: 0,
+                    duration: this.duration,
+                    ease: "power2.out",
+                },
+            );
+        }
+
+        private close() {
+            if (!this.activeValue) return;
+            this.classList.remove("is-open");
+
+            const currentContent = this.contents.find(
+                (el) => el.dataset.value === this.activeValue,
+            );
+
+            this.triggers.forEach((trig) => {
+                trig.classList.remove("is-active");
+                this.setTriggerExpanded(trig, false);
+                const chevron = trig.querySelector(".chevron");
+                if (chevron) {
+                    gsap.to(chevron, {
+                        rotate: 0,
+                        duration: this.duration,
+                        ease: "power2.inOut",
+                    });
+                }
+            });
+
+            if (this.wrapper) {
+                this.wrapper.style.pointerEvents = "none";
+                gsap.killTweensOf(this.wrapper);
+                gsap.to(this.wrapper, {
+                    height: 0,
+                    duration: this.duration,
+                    ease: "power2.inOut",
+                });
+            }
+
+            if (currentContent) {
+                gsap.killTweensOf(currentContent);
+                gsap.to(currentContent, {
+                    y: 12,
+                    duration: this.duration,
+                    ease: "power2.inOut",
+                    onComplete: () => {
+                        currentContent.classList.remove("is-active");
+                        gsap.set(currentContent, { visibility: "hidden" });
+                    },
+                });
+            }
+
+            this.activeValue = null;
+        }
+    }
+
+    if (!customElements.get("anim-dropdown-nav")) {
+        customElements.define("anim-dropdown-nav", AnmDropdownNav);
+    }
+</script>

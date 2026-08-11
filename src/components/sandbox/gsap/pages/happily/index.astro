@@ -1,0 +1,32 @@
+---
+import Navbar from "./Navbar.astro";
+import "./styles.css";
+import { Font } from "astro:assets";
+import { ClientRouter } from "astro:transitions";
+import Hero from "../happily/components/sections/Hero.astro";
+import AnimDropdownNav from "./components/AnimDropdownNav.astro";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <Font cssVariable="--font-suisse" preload />
+    <Font cssVariable="--font-sometype" preload />
+    <title>Demo</title>
+    <ClientRouter />
+  </head>
+  <body class="reset" data-color="light">
+    <Navbar />
+    <Hero />
+    <section style={{ display: "flex", flexDirection: "col" }}>
+      <div
+        style="min-height: 100vh; min-width: 100vw; display: flex; flex-direction: column"
+      >
+        hello
+      </div>
+    </section>
+    <AnimDropdownNav />
+  </body>
+</html>

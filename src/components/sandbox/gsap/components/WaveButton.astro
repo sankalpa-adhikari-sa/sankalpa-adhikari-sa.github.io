@@ -1,0 +1,286 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type Props = HTMLAttributes<"a"> &
+    HTMLAttributes<"button"> & {
+        icon?: string;
+        theme?: "auto" | "dark" | "light";
+        waveColor?: "orange" | "purple" | "blueberry";
+        waveWidth?: string;
+        stagger?: number;
+        duration?: number;
+        border?: boolean;
+        disableTextAnim?: boolean;
+    };
+const {
+    icon,
+    href,
+    class: className,
+    type = "button",
+    theme = "auto",
+    waveColor = "orange",
+    duration = 0.45,
+    stagger = 0.02,
+    waveWidth = "120%",
+    target,
+    border = false,
+    disableTextAnim = false,
+    ...rest
+} = Astro.props;
+const Tag = href ? "a" : "button";
+const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
+const slotContent = await Astro.slots.render("default");
+---
+
+<anim-wave-btn
+    data-stagger={stagger}
+    data-duration={duration}
+    data-disable-text-anim={disableTextAnim ? "true" : "false"}
+>
+    <Tag
+        class:list={[
+            "btn-wave",
+            theme !== "auto" && `btn-wave--theme-${theme}`,
+            `btn-wave--color-${waveColor}`,
+            border && "btn-wave--has-border",
+            disableTextAnim && "btn-wave--no-text-anim",
+            className,
+        ]}
+        href={href}
+        target={target}
+        rel={rel}
+        type={Tag === "button" ? type : undefined}
+        {...rest}
+    >
+        <span class="btn-wave__label">
+            <span class="btn-wave__label-text"><slot /></span>
+            <span
+                class="btn-wave__label-text"
+                aria-hidden
+                set:html={slotContent}
+            />
+        </span>
+        {icon && <Icon aria-hidden name={icon} class={"btn-wave__icon"} />}
+    </Tag>
+</anim-wave-btn>
+
+<style
+    define:vars={{ "wave-duration": `${duration}s`, "wave-width": waveWidth }}
+>
+    anim-wave-btn {
+        display: inline-block;
+    }
+
+    .btn-wave {
+        --button-bg: var(--white);
+        --button-text: var(--dark);
+        --button-hover-bg: var(--orange);
+        --button-hover-text: var(--white);
+
+        border-radius: 8rem;
+        background: transparent;
+        color: var(--button-text);
+        border: none;
+        outline: 1px solid transparent;
+        outline-offset: -1px;
+        box-shadow: none;
+        overflow: hidden;
+        cursor: pointer;
+        z-index: 1;
+        padding: 0.6rem 1.2rem;
+        position: relative;
+        display: inline-flex;
+        justify-content: space-between;
+        gap: 12px;
+        box-sizing: border-box;
+        text-decoration: none;
+        font-weight: 450;
+        isolation: isolate;
+        transition:
+            color 0.3s ease,
+            border-color 0.1s ease;
+    }
+    .btn-wave__label {
+        display: inline-flex;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-wave__label-text:nth-child(2) {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
+    .btn-wave__label-text:nth-child(1) {
+        color: var(--button-text);
+        transition: color 0.3s ease;
+    }
+
+    .btn-wave::before {
+        content: "";
+        background: var(--button-bg);
+        position: absolute;
+        left: 0%;
+        top: 0%;
+        height: 100%;
+        width: 100%;
+        transition: var(--wave-duration) cubic-bezier(0.645, 0.045, 0.355, 1);
+        z-index: -2;
+    }
+    .btn-wave::after {
+        content: "";
+        background: var(--button-hover-bg);
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: var(--wave-width);
+        height: auto;
+        aspect-ratio: 1;
+        transform: translate(-50%, 20%);
+        border-radius: 50%;
+        transition: transform var(--wave-duration)
+            cubic-bezier(0.645, 0.045, 0.355, 1);
+        z-index: -1;
+        will-change: transform;
+    }
+    .btn-wave:hover {
+        color: var(--button-hover-text);
+    }
+    .btn-wave:hover::after {
+        transform: translate(-50%, -50%);
+    }
+    .btn-wave--has-border:hover {
+        outline-color: var(--button-bg);
+    }
+    :global([data-color="dark"]) .btn-wave:not(.btn-wave--theme-light) {
+        --button-bg: var(--dark);
+        --button-text: var(--white);
+    }
+
+    :global([data-color="light"]) .btn-wave:not(.btn-wave--theme-dark) {
+        --button-bg: var(--white);
+        --button-text: var(--dark);
+    }
+
+    .btn-wave--color-orange {
+        --button-hover-bg: var(--orange);
+        --button-hover-text: var(--white);
+    }
+    .btn-wave--color-purple {
+        --button-hover-bg: var(--purple);
+        --button-hover-text: var(--white);
+    }
+    .btn-wave--color-blueberry {
+        --button-hover-bg: var(--blueberry);
+        --button-hover-text: var(--white);
+    }
+    .btn-wave--theme-dark {
+        --button-hover-bg: var(--dark);
+        --button-hover-text: var(--white);
+    }
+    .btn-wave--theme-light {
+        --button-hover-bg: var(--white);
+        --button-hover-text: var(--dark);
+    }
+
+    .btn-wave__icon {
+        width: 1rem;
+        height: 1rem;
+        flex-shrink: 0;
+    }
+</style>
+
+<script>
+    import { gsap, SplitText, CustomEase } from "@/utils/gsap-init";
+
+    class AnimWaveButton extends HTMLElement {
+        private ctx: gsap.Context | null = null;
+        private tl: gsap.core.Timeline | null = null;
+        private splitInstances: InstanceType<typeof SplitText>[] = [];
+
+        private buttonTarget: HTMLElement | null = null;
+
+        private stagger: number;
+        private duration: number;
+
+        constructor() {
+            super();
+            this.stagger = parseFloat(this.dataset.stagger || "0.02");
+            this.duration = parseFloat(this.dataset.duration || "0.45");
+            this.handlePlay = this.handlePlay.bind(this);
+            this.handleReverse = this.handleReverse.bind(this);
+        }
+        async connectedCallback() {
+            if (this.dataset.disableTextAnim === "true") return;
+            this.buttonTarget = this.querySelector<HTMLElement>(".btn-wave");
+            const targets = this.querySelectorAll<HTMLElement>(
+                ".btn-wave__label-text",
+            );
+
+            if (!this.buttonTarget || targets.length < 2) return;
+
+            if (!gsap.parseEase("waveEase")) {
+                CustomEase.create("waveEase", "0.645, 0.045, 0.355, 1");
+            }
+
+            await document.fonts.ready;
+            if (!this.isConnected) return;
+
+            this.ctx = gsap.context(() => {
+                this.splitInstances = Array.from(targets).map(
+                    (text) => new SplitText(text, { type: "chars" }),
+                );
+
+                this.tl = gsap.timeline({
+                    paused: true,
+                    defaults: {
+                        stagger: this.stagger,
+                        duration: this.duration,
+                        ease: "waveEase",
+                    },
+                });
+                if (this.splitInstances[1]?.chars) {
+                    gsap.set(this.splitInstances[1].chars, { y: "100%" });
+
+                    this.tl
+                        .to(this.splitInstances[0].chars, { y: "-105%" })
+                        .to(this.splitInstances[1].chars, { y: "0%" }, "<");
+                }
+            }, this);
+
+            this.buttonTarget.addEventListener("mouseenter", this.handlePlay);
+            this.buttonTarget.addEventListener(
+                "mouseleave",
+                this.handleReverse,
+            );
+        }
+        async disconnectedCallback() {
+            if (this.buttonTarget) {
+                this.buttonTarget.removeEventListener(
+                    "mouseenter",
+                    this.handlePlay,
+                );
+                this.buttonTarget.removeEventListener(
+                    "mouseleave",
+                    this.handleReverse,
+                );
+            }
+            this.ctx?.revert();
+            this.splitInstances.forEach((instance) => instance.revert());
+            this.splitInstances = [];
+            this.tl?.kill();
+        }
+
+        private handlePlay() {
+            if (this.tl) this.tl.play();
+        }
+
+        private handleReverse() {
+            if (this.tl) this.tl.reverse();
+        }
+    }
+    if (!customElements.get("anim-wave-btn")) {
+        customElements.define("anim-wave-btn", AnimWaveButton);
+    }
+</script>

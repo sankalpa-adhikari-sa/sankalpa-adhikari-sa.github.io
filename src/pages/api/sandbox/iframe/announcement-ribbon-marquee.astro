@@ -1,0 +1,16 @@
+---
+import AnnouncementRibbonMarquee from "@/components/sandbox/gsap/components/AnnouncementRibbonMarquee.astro";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+---
+
+<PageLayout title="Sandbox" description="">
+    <AnnouncementRibbonMarquee
+        direction="right"
+        pauseOnHover
+        items={[
+            'use code "FIRSTORDER" for free shipping',
+            "bundle & save up to 20%",
+            "FLASH SALE: 24 HOURS ONLY",
+        ]}
+    />
+</PageLayout>

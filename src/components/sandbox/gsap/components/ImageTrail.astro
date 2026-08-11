@@ -1,0 +1,325 @@
+---
+export interface Props {
+  images?: string[];
+  movementThreshold?: number;
+  delayBetween?: number;
+  imageWidth?: number;
+  imageHeight?: number;
+  rotationEnabled?: boolean;
+  rotationRange?: [number, number];
+}
+
+const {
+  images = [
+    "https://picsum.photos/id/1018/300/200",
+    "https://picsum.photos/id/1025/300/200",
+    "https://picsum.photos/id/1035/300/200",
+    "https://picsum.photos/id/1069/300/200",
+    "https://picsum.photos/id/1074/300/200",
+  ],
+  movementThreshold = 40,
+  delayBetween = 20,
+  imageWidth = 160,
+  imageHeight,
+  rotationEnabled = true,
+  rotationRange = [-20, 20],
+} = Astro.props;
+---
+
+<anm-image-trail
+  class="image-trail-wrapper"
+  data-movement-threshold={movementThreshold}
+  data-delay-between={delayBetween}
+  data-image-width={imageWidth}
+  data-image-height={imageHeight}
+  data-rotation-enabled={String(rotationEnabled)}
+  data-rotation-range={JSON.stringify(rotationRange)}
+>
+  <slot />
+
+  <div class="image_trail_container"></div>
+
+  <div class="image_trail_gallery" style="display: none;">
+    {images.map((src, index) => <img src={src} alt={`Trail ${index + 1}`} />)}
+  </div>
+</anm-image-trail>
+
+<style>
+  anm-image-trail.image-trail-wrapper {
+    position: relative;
+    display: block;
+    width: 100%;
+  }
+
+  .image_trail_container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 10;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+  }
+
+  :global(.image_trail_item) {
+    position: fixed;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    pointer-events: none;
+    will-change: transform, opacity;
+  }
+</style>
+
+<script>
+  import { gsap } from "@/utils/gsap-init";
+
+  class AnmImageTrail extends HTMLElement {
+    private trailContainer: HTMLElement | null;
+    private galleryContainer: HTMLElement | null;
+    private images: HTMLImageElement[] = [];
+    private activeTrails = new Set<HTMLImageElement>();
+
+    private movementThreshold: number;
+    private delayBetween: number;
+    private imageWidth: number;
+    private imageHeight?: number;
+    private explicitHeight: boolean;
+    private rotationEnabled: boolean;
+    private rotationRange: [number, number];
+
+    private currentImageIndex = 0;
+    private lastMousePosition: { x: number; y: number } | null = null;
+    private lastImageTimestamp = performance.now();
+
+    private isListenerAttached = false;
+    private reducedMotionQuery: MediaQueryList;
+
+    private static entranceDuration = 0.5;
+    private static exitDuration = 0.5;
+    private static exitDelay = 0.5;
+    private static entranceEase = "back.out(2)";
+    private static exitEase = "power2.in";
+    private static maxActiveImages = 50;
+
+    constructor() {
+      super();
+      this.trailContainer = this.querySelector(".image_trail_container");
+      this.galleryContainer = this.querySelector(".image_trail_gallery");
+      this.images = this.galleryContainer
+        ? Array.from(this.galleryContainer.querySelectorAll("img"))
+        : [];
+
+      this.movementThreshold = this.parseNumericAttr(
+        this.dataset.movementThreshold,
+        50,
+      );
+      this.delayBetween = this.parseNumericAttr(this.dataset.delayBetween, 30);
+      this.imageWidth = this.parseNumericAttr(this.dataset.imageWidth, 180);
+
+      if (this.dataset.imageHeight) {
+        this.imageHeight = this.parseNumericAttr(this.dataset.imageHeight, 150);
+        this.explicitHeight = true;
+      } else {
+        this.explicitHeight = false;
+      }
+
+      this.rotationEnabled = this.dataset.rotationEnabled !== "false";
+      this.rotationRange = this.parseRotationRange(this.dataset.rotationRange);
+
+      this.reducedMotionQuery = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      );
+
+      this.handleMouseMove = this.handleMouseMove.bind(this);
+      this.handleReducedMotionChange =
+        this.handleReducedMotionChange.bind(this);
+    }
+
+    connectedCallback() {
+      if (!this.supportsMouseHover() || this.images.length === 0) return;
+
+      this.reducedMotionQuery.addEventListener(
+        "change",
+        this.handleReducedMotionChange,
+      );
+
+      if (this.reducedMotionQuery.matches) return;
+
+      this.start();
+    }
+
+    disconnectedCallback() {
+      this.stop();
+      this.reducedMotionQuery.removeEventListener(
+        "change",
+        this.handleReducedMotionChange,
+      );
+    }
+
+    private start() {
+      if (!this.trailContainer || this.images.length === 0) return;
+
+      this.waitForImages(this.images).then(() => {
+        if (this.reducedMotionQuery.matches) return;
+        this.addEventListener("mousemove", this.handleMouseMove);
+        this.isListenerAttached = true;
+      });
+    }
+
+    private stop() {
+      if (this.isListenerAttached) {
+        this.removeEventListener("mousemove", this.handleMouseMove);
+        this.isListenerAttached = false;
+      }
+
+      this.activeTrails.forEach((image) => {
+        gsap.killTweensOf(image);
+        image.remove();
+      });
+      this.activeTrails.clear();
+      this.lastMousePosition = null;
+    }
+
+    private handleReducedMotionChange(e: MediaQueryListEvent) {
+      if (e.matches) {
+        this.stop();
+      } else {
+        this.start();
+      }
+    }
+
+    private handleMouseMove(event: MouseEvent) {
+      if (this.lastMousePosition === null) {
+        this.lastMousePosition = { x: event.clientX, y: event.clientY };
+        this.lastImageTimestamp = performance.now();
+        return;
+      }
+
+      const deltaX = event.clientX - this.lastMousePosition.x;
+      const deltaY = event.clientY - this.lastMousePosition.y;
+      const distanceMoved = deltaX * deltaX + deltaY * deltaY;
+
+      if (distanceMoved < this.movementThreshold * this.movementThreshold)
+        return;
+
+      const now = performance.now();
+      if (now - this.lastImageTimestamp < this.delayBetween) return;
+
+      if (this.activeTrails.size >= AnmImageTrail.maxActiveImages) {
+        const oldestImage = this.activeTrails.values().next().value;
+        if (oldestImage) {
+          gsap.killTweensOf(oldestImage);
+          oldestImage.remove();
+          this.activeTrails.delete(oldestImage);
+        }
+      }
+
+      const sourceImage = this.images[this.currentImageIndex];
+      const clonedImage = sourceImage.cloneNode(true) as HTMLImageElement;
+      clonedImage.classList.add("image_trail_item");
+      clonedImage.setAttribute("aria-hidden", "true");
+      clonedImage.alt = "";
+
+      this.currentImageIndex =
+        (this.currentImageIndex + 1) % this.images.length;
+
+      const width = this.imageWidth;
+      let height: number;
+      if (this.explicitHeight && this.imageHeight) {
+        height = this.imageHeight;
+      } else {
+        const aspectRatio =
+          (sourceImage.naturalWidth || this.imageWidth) /
+          (sourceImage.naturalHeight || this.imageHeight || 150);
+        height = width / aspectRatio;
+      }
+
+      clonedImage.style.width = `${width}px`;
+      clonedImage.style.height = `${height}px`;
+      clonedImage.style.left = `${event.clientX - width / 2}px`;
+      clonedImage.style.top = `${event.clientY - height / 2}px`;
+
+      this.trailContainer?.appendChild(clonedImage);
+      this.activeTrails.add(clonedImage);
+
+      const rotationAngle = this.rotationEnabled
+        ? gsap.utils.random(this.rotationRange[0], this.rotationRange[1])
+        : 0;
+
+      gsap.fromTo(
+        clonedImage,
+        { scale: 0, rotation: rotationAngle },
+        {
+          scale: 1,
+          duration: AnmImageTrail.entranceDuration,
+          ease: AnmImageTrail.entranceEase,
+          force3D: true,
+        },
+      );
+
+      gsap.to(clonedImage, {
+        scale: 0,
+        duration: AnmImageTrail.exitDuration,
+        delay: AnmImageTrail.exitDelay,
+        ease: AnmImageTrail.exitEase,
+        onComplete: () => {
+          clonedImage.remove();
+          this.activeTrails.delete(clonedImage);
+        },
+      });
+
+      this.lastMousePosition = { x: event.clientX, y: event.clientY };
+      this.lastImageTimestamp = now;
+    }
+
+    private parseNumericAttr(
+      value: string | undefined,
+      fallback: number,
+    ): number {
+      if (value === undefined) return fallback;
+      const parsed = parseFloat(value);
+      return Number.isNaN(parsed) ? fallback : parsed;
+    }
+
+    private parseRotationRange(value: string | undefined): [number, number] {
+      if (!value) return [-20, 20];
+      try {
+        const parsed = JSON.parse(value);
+        if (
+          Array.isArray(parsed) &&
+          parsed.length === 2 &&
+          typeof parsed[0] === "number" &&
+          typeof parsed[1] === "number"
+        ) {
+          return parsed as [number, number];
+        }
+      } catch {}
+      return [-20, 20];
+    }
+
+    private supportsMouseHover(): boolean {
+      return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    }
+
+    private waitForImages(imgs: HTMLImageElement[]): Promise<void> {
+      return Promise.all(
+        imgs.map((img) => {
+          if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+          return new Promise<void>((resolve) => {
+            img.addEventListener("load", () => resolve(), {
+              once: true,
+            });
+            img.addEventListener("error", () => resolve(), {
+              once: true,
+            });
+          });
+        }),
+      ).then(() => undefined);
+    }
+  }
+
+  if (!customElements.get("anm-image-trail")) {
+    customElements.define("anm-image-trail", AnmImageTrail);
+  }
+</script>

@@ -1,0 +1,390 @@
+---
+import { Icon } from "astro-icon/components";
+import { ActionButton } from "./button/index";
+
+export interface Props {
+    duration?: number;
+    class?: string;
+}
+
+const { duration = 0.3, class: className } = Astro.props;
+---
+
+<anim-dropdown-nav
+    data-duration={duration}
+    class:list={["nav-wrapper", className]}
+>
+    <div class="nav-container">
+        <anim-dropdown-nav-list>
+            <anim-dropdown-nav-trigger data-value="shop">
+                <a target="_self" class="nav-items-link" aria-label="shop">
+                    <span>shop</span>
+                    <Icon name="heroicons:chevron-down" class="chevron" />
+                </a>
+            </anim-dropdown-nav-trigger>
+            <anim-dropdown-nav-trigger data-value="explore">
+                <a target="_self" class="nav-items-link" aria-label="explore">
+                    <span>explore</span>
+                    <Icon name="heroicons:chevron-down" class="chevron" />
+                </a>
+            </anim-dropdown-nav-trigger>
+            <anim-dropdown-nav-trigger>
+                <a target="_self" class="nav-items-link" aria-label="subscribe">
+                    <span>subscribe</span>
+                </a>
+            </anim-dropdown-nav-trigger>
+        </anim-dropdown-nav-list>
+    </div>
+
+    <div class="nav-actions">
+        <ActionButton icon={"heroicons:user"} />
+        <ActionButton icon={"heroicons:shopping-bag"} />
+
+        <button>
+            <span class="burger-line"></span>
+            <span class="burger-line"></span>
+        </button>
+    </div>
+
+    <div class="dropdown-wrapper">
+        <anim-dropdown-nav-content data-value="shop" class="nav-dropdown">
+            <div class="dropdown-inner">
+                <h3>Shop Categories</h3>
+                <p>Full width content block for shop items...</p>
+            </div>
+        </anim-dropdown-nav-content>
+        <anim-dropdown-nav-content data-value="explore" class="nav-dropdown">
+            <div class="dropdown-inner">
+                <h3>Explore Content</h3>
+                <p>Full width content block for explore links...</p>
+            </div>
+        </anim-dropdown-nav-content>
+    </div>
+</anim-dropdown-nav>
+
+<style>
+    anim-dropdown-nav {
+        position: relative;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 20;
+        pointer-events: auto;
+        max-width: calc(100% - 2rem);
+        padding: 1.2rem 0;
+        font-size: 1.6rem;
+    }
+
+    .nav-container {
+        align-items: center;
+        display: flex;
+        height: 100%;
+        left: 50%;
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: auto;
+        z-index: 20;
+    }
+
+    .nav-actions {
+        display: flex;
+        gap: 0.8rem;
+        margin-left: auto;
+        position: relative;
+        z-index: 2;
+        pointer-events: auto;
+    }
+
+    anim-dropdown-nav-list {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+    }
+
+    .nav-items-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        text-decoration: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 1.6rem;
+        letter-spacing: -0.016rem;
+        line-height: 1.6rem;
+    }
+
+    .chevron {
+        width: 1.2rem;
+        height: 1.2rem;
+        transform-origin: center;
+    }
+
+    .dropdown-wrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 0;
+        background-color: var(--light, #ffffff);
+        border-radius: 0 0 2rem 2rem;
+        z-index: 1;
+        overflow: hidden;
+        pointer-events: none;
+        opacity: 0;
+    }
+
+    anim-dropdown-nav-content {
+        display: none;
+        padding-top: 5rem;
+        padding-bottom: 2rem;
+        padding-left: 2rem;
+        padding-right: 2rem;
+        width: 100%;
+        height: 100%;
+        color: #000000;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: auto;
+        box-sizing: border-box;
+    }
+
+    anim-dropdown-nav-content.is-active {
+        display: block;
+    }
+
+    .dropdown-inner {
+        max-width: 1200px;
+        margin: 0 auto;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+    anim-dropdown-nav-trigger {
+        display: inline-flex;
+        align-items: center;
+        height: 100%;
+    }
+</style>
+
+<script>
+    import { gsap } from "@/utils/gsap-init";
+
+    class AnmDropdownNav extends HTMLElement {
+        private triggers: HTMLElement[] = [];
+        private contents: HTMLElement[] = [];
+        private wrapper: HTMLElement | null = null;
+        private activeValue: string | null = null;
+        private duration: number;
+        private closeTimeout: ReturnType<typeof setTimeout> | null = null;
+
+        constructor() {
+            super();
+            this.duration = parseFloat(this.dataset.duration || "0.3");
+
+            this.handleTriggerEnter = this.handleTriggerEnter.bind(this);
+            this.handleMouseLeave = this.handleMouseLeave.bind(this);
+            this.handleDropdownEnter = this.handleDropdownEnter.bind(this);
+            this.updatePosition = this.updatePosition.bind(this);
+        }
+
+        connectedCallback() {
+            this.triggers = Array.from(
+                this.querySelectorAll("anim-dropdown-nav-trigger"),
+            );
+            this.contents = Array.from(
+                this.querySelectorAll("anim-dropdown-nav-content"),
+            );
+            this.wrapper = this.querySelector(".dropdown-wrapper");
+
+            this.triggers.forEach((trigger) => {
+                trigger.addEventListener("mouseenter", this.handleTriggerEnter);
+                trigger.addEventListener("focusin", this.handleTriggerEnter);
+            });
+
+            if (this.wrapper) {
+                this.wrapper.addEventListener(
+                    "mouseenter",
+                    this.handleDropdownEnter,
+                );
+            }
+
+            this.addEventListener("mouseleave", this.handleMouseLeave);
+            window.addEventListener("resize", this.updatePosition);
+
+            this.updatePosition();
+        }
+
+        disconnectedCallback() {
+            this.triggers.forEach((trigger) => {
+                trigger.removeEventListener(
+                    "mouseenter",
+                    this.handleTriggerEnter,
+                );
+                trigger.removeEventListener("focusin", this.handleTriggerEnter);
+            });
+
+            if (this.wrapper) {
+                this.wrapper.removeEventListener(
+                    "mouseenter",
+                    this.handleDropdownEnter,
+                );
+            }
+
+            this.removeEventListener("mouseleave", this.handleMouseLeave);
+            window.removeEventListener("resize", this.updatePosition);
+        }
+
+        private updatePosition() {
+            if (!this.wrapper) return;
+
+            const rect = this.getBoundingClientRect();
+
+            // Align to left edge of screen for full bleed, top is natively 0
+            this.wrapper.style.left = `-${rect.left}px`;
+            this.wrapper.style.top = `0px`;
+            this.wrapper.style.width = `100vw`;
+        }
+
+        private handleTriggerEnter(e: Event) {
+            this.clearCloseTimeout();
+            const trigger = e.currentTarget as HTMLElement;
+            const value = trigger.dataset.value;
+
+            if (value) {
+                this.open(value);
+            } else {
+                this.close();
+            }
+        }
+
+        private handleDropdownEnter() {
+            this.clearCloseTimeout();
+        }
+
+        private handleMouseLeave() {
+            this.closeTimeout = setTimeout(() => {
+                this.close();
+            }, 150);
+        }
+
+        private clearCloseTimeout() {
+            if (this.closeTimeout) {
+                clearTimeout(this.closeTimeout);
+                this.closeTimeout = null;
+            }
+        }
+
+        private open(value: string) {
+            this.updatePosition();
+            const isFirstOpen = !this.activeValue;
+
+            if (this.activeValue === value) return;
+
+            const nextContent = this.contents.find(
+                (el) => el.dataset.value === value,
+            );
+            if (!nextContent) return;
+
+            if (isFirstOpen && this.wrapper) {
+                this.wrapper.style.pointerEvents = "auto";
+                gsap.killTweensOf(this.wrapper);
+                gsap.to(this.wrapper, {
+                    height: "70vh",
+                    opacity: 1,
+                    duration: this.duration,
+                    ease: "power2.out",
+                });
+            }
+
+            if (this.activeValue) {
+                const currentContent = this.contents.find(
+                    (el) => el.dataset.value === this.activeValue,
+                );
+                if (currentContent) {
+                    gsap.to(currentContent, {
+                        opacity: 0,
+                        duration: this.duration * 0.4,
+                        onComplete: () => {
+                            currentContent.classList.remove("is-active");
+                            gsap.set(currentContent, { visibility: "hidden" });
+                        },
+                    });
+                }
+            }
+
+            this.triggers.forEach((trig) => {
+                const chevron = trig.querySelector(".chevron");
+                if (chevron) {
+                    const isActive = trig.dataset.value === value;
+                    gsap.to(chevron, {
+                        rotate: isActive ? 180 : 0,
+                        duration: this.duration,
+                    });
+                }
+            });
+
+            this.activeValue = value;
+            nextContent.classList.add("is-active");
+
+            gsap.killTweensOf(nextContent);
+            gsap.fromTo(
+                nextContent,
+                { opacity: 0, y: 12, visibility: "visible" },
+                {
+                    opacity: 1,
+                    y: 0,
+                    duration: this.duration,
+                    delay: isFirstOpen ? this.duration * 0.2 : 0,
+                    ease: "power2.out",
+                },
+            );
+        }
+
+        private close() {
+            if (!this.activeValue) return;
+
+            const currentContent = this.contents.find(
+                (el) => el.dataset.value === this.activeValue,
+            );
+
+            this.triggers.forEach((trig) => {
+                const chevron = trig.querySelector(".chevron");
+                if (chevron) {
+                    gsap.to(chevron, { rotate: 0, duration: this.duration });
+                }
+            });
+
+            if (this.wrapper) {
+                this.wrapper.style.pointerEvents = "none";
+                gsap.killTweensOf(this.wrapper);
+                gsap.to(this.wrapper, {
+                    height: 0,
+                    opacity: 0,
+                    duration: this.duration,
+                    ease: "power2.inOut",
+                });
+            }
+
+            if (currentContent) {
+                gsap.killTweensOf(currentContent);
+                gsap.to(currentContent, {
+                    opacity: 0,
+                    duration: this.duration * 0.4,
+                    onComplete: () => {
+                        currentContent.classList.remove("is-active");
+                        gsap.set(currentContent, { visibility: "hidden" });
+                    },
+                });
+            }
+
+            this.activeValue = null;
+        }
+    }
+
+    if (!customElements.get("anim-dropdown-nav")) {
+        customElements.define("anim-dropdown-nav", AnmDropdownNav);
+    }
+</script>

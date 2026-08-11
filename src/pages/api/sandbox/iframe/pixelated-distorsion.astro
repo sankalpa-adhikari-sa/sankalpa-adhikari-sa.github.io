@@ -1,0 +1,229 @@
+---
+import { Icon } from "astro-icon/components";
+import { PixelDistortionCanvas } from "@/components/sandbox/threejs/PixelDistortion";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+
+const projects = [
+  {
+    title: "NSAE",
+    description: "Nepalese Society of Agricultural Engineers.",
+    src: "https://picsum.photos/id/1018/1200/800",
+    tags: ["creative direction", "visual identity", "motion", "web design"],
+    href: "#",
+  },
+  {
+    title: "CIMMYT",
+    description: "Centro Internacional de Mejoramiento de Maíz y Trigo.",
+    videoSrc: "/vids/2.mp4",
+    tags: ["3D graphics", "shading", "ui/ux"],
+    href: "#",
+  },
+];
+---
+
+<PageLayout title="" description="">
+  <div class="projects-grid">
+    {
+      projects.map((project) => (
+        <article class="project-card">
+          <a
+            href={project.href}
+            class="card-link-wrapper"
+            aria-label={`View ${project.title}`}
+          >
+            <div class="media-container">
+              <PixelDistortionCanvas
+                client:only="react"
+                src={project.src}
+                videoSrc={project.videoSrc}
+                aspect={9 / 16}
+              />
+
+              <div class="tags-overlay">
+                {project.tags.map((tag) => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            </div>
+
+            <div class="card-info">
+              <div class="info-content">
+                <h3 class="card-title">{project.title}</h3>
+                <p class="card-description">{project.description}</p>
+              </div>
+
+              <div class="view-project">
+                <div class="arrow-box">
+                  <Icon
+                    name="heroicons:arrow-up-right-16-solid"
+                    class="arrow-icon"
+                  />
+                </div>
+                <span class="view-text">View Project</span>
+              </div>
+            </div>
+          </a>
+        </article>
+      ))
+    }
+  </div>
+</PageLayout>
+<style>
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 3rem 1.5rem;
+    padding: 1rem;
+  }
+
+  .project-card {
+    grid-column: span 12;
+
+    @media (min-width: 768px) {
+      grid-column: span 6;
+    }
+  }
+
+  .card-link-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      filter 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .project-card:hover .card-link-wrapper {
+    transform: scale(1.015);
+  }
+
+  .media-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background-color: #0a0a0a;
+  }
+
+  .tags-overlay {
+    position: absolute;
+    right: 1.25rem;
+    bottom: 1.25rem;
+    display: none;
+    gap: 0.5rem;
+    pointer-events: none;
+    z-index: 20;
+
+    @media (min-width: 640px) {
+      display: flex;
+    }
+  }
+
+  .tag {
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    color: var(--foreground);
+    background: var(--background);
+    border: 1px solid var(--border);
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.25rem;
+    backdrop-filter: blur(12px);
+    transform: rotate(-2deg);
+    opacity: 0.7;
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s ease;
+  }
+
+  .project-card:hover .tag {
+    opacity: 1;
+    transform: rotate(0deg);
+  }
+
+  .card-info {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    width: 100%;
+  }
+
+  .info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 28rem;
+  }
+
+  .card-title {
+    font-size: clamp(1rem, 2.5vw, 2.25rem);
+    font-weight: 500;
+    line-height: 1.15;
+    color: var(--foreground);
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+
+  .card-description {
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: clamp(0.65rem, 1.2vw, 1rem);
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+
+  .view-project {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-top: 0.25rem;
+  }
+
+  .arrow-box {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    background-color: var(--foreground);
+    border-radius: 0.125rem;
+    transform: scale(0);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .project-card:hover .arrow-box {
+    transform: scale(1);
+  }
+
+  .arrow-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: var(--background);
+  }
+
+  .view-text {
+    font-family:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    color: var(--foreground);
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition:
+      opacity 0.3s ease,
+      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .project-card:hover .view-text {
+    opacity: 1;
+    transform: translateX(0);
+  }
+</style>

@@ -1,0 +1,55 @@
+---
+import { ImageTrail } from "@/components/sandbox/gsap/components";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+
+const galleryImages = [
+  "https://picsum.photos/id/1018/300/200",
+  "https://picsum.photos/id/1025/300/200",
+  "https://picsum.photos/id/1035/300/200",
+  "https://picsum.photos/id/1069/300/200",
+  "https://picsum.photos/id/1074/300/200",
+];
+---
+
+<PageLayout title="Sandbox" description="">
+  <ImageTrail images={galleryImages} movementThreshold={35}>
+    <main class="showcase">
+      <div class="instructions">
+        <h2>Move your mouse around this box</h2>
+      </div>
+    </main>
+  </ImageTrail>
+</PageLayout>
+
+<style>
+  .showcase {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #18181b;
+    border: 2px dotted #52525b;
+    box-sizing: border-box;
+    color: #ffffff;
+    user-select: none;
+    cursor: crosshair;
+  }
+
+  .instructions {
+    text-align: center;
+    pointer-events: none;
+  }
+
+  .instructions h2 {
+    font-size: 1rem;
+    font-weight: 500;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .instructions p {
+    color: #a1a1aa;
+    margin: 0;
+    font-size: 1rem;
+  }
+</style>

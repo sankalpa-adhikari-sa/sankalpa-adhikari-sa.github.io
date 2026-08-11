@@ -1,4 +1,5 @@
 import gsap from "gsap";
+import { CustomEase } from "gsap/CustomEase";
 import { GSDevTools } from "gsap/GSDevTools";
 import { Observer } from "gsap/Observer";
 import ScrambleTextPlugin from "gsap/ScrambleTextPlugin";
@@ -11,6 +12,7 @@ gsap.registerPlugin(
 	ScrambleTextPlugin,
 	Observer,
 	GSDevTools,
+	CustomEase,
 );
 
 export {
@@ -20,4 +22,5 @@ export {
 	ScrambleTextPlugin,
 	Observer,
 	GSDevTools,
+	CustomEase,
 };

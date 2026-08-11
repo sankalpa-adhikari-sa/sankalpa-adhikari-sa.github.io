@@ -1,0 +1,181 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type Props = HTMLAttributes<"a"> &
+  HTMLAttributes<"button"> & {
+    icon?: string;
+    ariaLabel?: string;
+    theme?: "auto" | "dark" | "light";
+    direction?: "left" | "right";
+    expandedWidth?: string;
+  };
+
+const {
+  href,
+  icon,
+  ariaLabel,
+  class: className,
+  theme = "auto",
+  direction = "right",
+  expandedWidth = "12rem",
+  target,
+  type = "button",
+  ...rest
+} = Astro.props;
+
+const Tag = href ? "a" : "button";
+const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
+---
+
+<Tag
+  href={href}
+  target={target}
+  rel={rel}
+  type={Tag === "button" ? type : undefined}
+  aria-label={ariaLabel || rest["aria-label"]}
+  style={`--expanded-width:${expandedWidth}`}
+  class:list={[
+    "button__expanded",
+    `button--${direction}`,
+    theme !== "auto" && `button--${theme}`,
+    className,
+  ]}
+  {...rest}
+>
+  <span class="button__label">
+    <slot />
+  </span>
+
+  {icon && <Icon class="button__icon" name={icon} aria-hidden="true" />}
+</Tag>
+
+<style>
+  .button__expanded {
+    --button-bg: var(--dark);
+    --button-text: var(--white);
+    --expanded-width: 16rem;
+
+    /* Define the shared transition timing here so everything stays in perfect sync */
+    --expand-transition: 0.45s cubic-bezier(0.645, 0.045, 0.355, 1);
+
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+
+    width: 3.4rem;
+    height: 3.4rem;
+
+    overflow: hidden;
+    white-space: nowrap;
+
+    border: none;
+    border-radius: 8rem;
+    background: var(--button-bg);
+    color: var(--button-text);
+    text-decoration: none;
+
+    transition: width var(--expand-transition);
+
+    isolation: isolate;
+  }
+
+  .button__expanded:hover,
+  .button__expanded:focus-visible {
+    width: var(--expanded-width);
+  }
+
+  .button--right {
+    justify-content: flex-end;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .button--right .button__icon {
+    margin-left: 0.75rem;
+    flex-shrink: 0;
+    order: 2;
+  }
+
+  .button--right .button__label {
+    order: 1;
+    margin-right: auto;
+
+    opacity: 0;
+    transform: translateX(-12px);
+
+    /* Use the synchronized transition variable */
+    transition:
+      opacity var(--expand-transition),
+      transform var(--expand-transition);
+  }
+
+  .button--right:hover .button__label,
+  .button--right:focus-visible .button__label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .button--left {
+    justify-content: flex-start;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .button--left .button__icon {
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    order: 1;
+  }
+
+  .button--left .button__label {
+    order: 2;
+    margin-left: auto;
+
+    opacity: 0;
+    transform: translateX(12px);
+
+    /* Use the synchronized transition variable */
+    transition:
+      opacity var(--expand-transition),
+      transform var(--expand-transition);
+  }
+
+  .button--left:hover .button__label,
+  .button--left:focus-visible .button__label {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .button__label {
+    white-space: nowrap;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .button__icon {
+    width: 1.4rem;
+    height: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  .button--dark {
+    --button-bg: var(--dark);
+    --button-text: var(--white);
+  }
+
+  .button--light {
+    --button-bg: var(--white);
+    --button-text: var(--dark);
+  }
+
+  :global([data-color="dark"]) .button__expanded:not(.button--light) {
+    --button-bg: var(--dark);
+    --button-text: var(--white);
+  }
+
+  :global([data-color="light"]) .button__expanded:not(.button--dark) {
+    --button-bg: var(--white);
+    --button-text: var(--dark);
+  }
+</style>

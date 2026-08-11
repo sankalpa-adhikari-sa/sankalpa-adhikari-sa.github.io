@@ -1,0 +1,35 @@
+---
+import {
+    DropdownNav,
+    NavMenuContent,
+    NavMenuList,
+    NavMenuTrigger,
+} from "@/components/sandbox/gsap/components/DropdownNavmenu";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+---
+
+<PageLayout title="Sandbox" description="">
+    <DropdownNav>
+        <NavMenuList>
+            <NavMenuTrigger value="shop" href="/shop">Shop</NavMenuTrigger>
+            <NavMenuTrigger value="explore" href="/explore"
+                >Explore</NavMenuTrigger
+            >
+            <NavMenuTrigger href="/subscribe">Subscribe</NavMenuTrigger>
+        </NavMenuList>
+
+        <NavMenuContent value="shop">
+            <div class="dropdown-inner">
+                <h3>Shop Categories</h3>
+                <p>Full width content block for shop items...</p>
+            </div>
+        </NavMenuContent>
+
+        <NavMenuContent value="explore">
+            <div class="dropdown-inner">
+                <h3>Explore Contents</h3>
+                <p>Full width content block for explore links...</p>
+            </div>
+        </NavMenuContent>
+    </DropdownNav>
+</PageLayout>
