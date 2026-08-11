@@ -87,5 +87,36 @@ const work = defineCollection({
 			readingTime: z.boolean().default(false),
 		}),
 });
+export const sandboxComponents = defineCollection({
+	loader: glob({
+		pattern: "**/[^_]*.{md,mdx}",
+		base: "./src/content/sandbox-components",
+	}),
+	schema: ({ image }) =>
+		z.object({
+			id: z.string().optional(),
+			title: z.string(),
+			subtitle: z.string().optional(),
+			slug: z
+				.string()
+				.optional()
+				.describe("Custom URL slug (defaults to filename)"),
+			draft: z.boolean().default(false),
+			description: z.string().optional(),
+			pubDate: z.coerce.date().default(() => new Date()),
+			lastUpdated: z.coerce.date().optional(),
+			cover: image().optional(),
+			coverAlt: z.string().optional(),
+			tags: z.array(z.string()).optional(),
+			iframeUrl: z.string(),
+			src: z.string().optional(),
+			preview: z
+				.object({
+					image_src: z.string().or(image()).optional(),
+					video_src: z.string().optional(),
+				})
+				.optional(),
+		}),
+});
 
-export const collections = { articles, projects, work };
+export const collections = { articles, projects, work, sandboxComponents };

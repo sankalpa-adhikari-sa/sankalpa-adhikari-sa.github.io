@@ -1,0 +1,55 @@
+---
+import HorizontalAccordianCard from "@/components/sandbox/gsap/components/HorizontalAccordianCard.astro";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+
+const cards = [
+    {
+        title: "Strategy Matters",
+        description:
+            "Why brand strategy is essential and how to construct one that scales long-term.",
+        tag: "Strategy",
+        video: "https://www.produx.design/videos/JournalVideos/3.mp4",
+    },
+    {
+        title: "Visual Identity",
+        description:
+            "Crafting memorable digital presence with modern aesthetics and motion.",
+        tag: "Branding",
+        video: "https://www.produx.design/videos/JournalVideos/5.mp4",
+        link: "#",
+    },
+    {
+        title: "Visual Identity",
+        description:
+            "Crafting memorable digital presence with modern aesthetics and motion.",
+        tag: "Branding",
+        video: "https://www.produx.design/videos/JournalVideos/4.mp4",
+    },
+    {
+        title: "Visual Identity",
+        description:
+            "Crafting memorable digital presence with modern aesthetics and motion.",
+        tag: "Branding",
+        image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80",
+    },
+
+    {
+        title: "Visual Identity",
+        description:
+            "Crafting memorable digital presence with modern aesthetics and motion.",
+        tag: "Branding",
+        image: "https://picsum.photos/id/1018/600/400",
+    },
+    {
+        title: "Visual Identity",
+        description:
+            "Crafting memorable digital presence with modern aesthetics and motion.",
+        tag: "Branding",
+        image: "https://picsum.photos/id/1011/600/400",
+    },
+];
+---
+
+<PageLayout title="Sandbox" description="">
+    <HorizontalAccordianCard items={cards} />
+</PageLayout>

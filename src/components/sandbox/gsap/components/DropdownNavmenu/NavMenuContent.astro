@@ -1,0 +1,38 @@
+---
+export interface Props {
+    value: string;
+    class?: string;
+    label?: string;
+}
+
+const { value, class: className, label } = Astro.props;
+---
+
+<anim-dropdown-nav-content
+    id={`dropdown-${value}`}
+    data-value={value}
+    class:list={["nav-dropdown", className]}
+    role="region"
+    aria-label={label ?? value}
+>
+    <slot />
+</anim-dropdown-nav-content>
+
+<style>
+    anim-dropdown-nav-content {
+        display: none;
+        padding-top: 3rem;
+        padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+        width: 100%;
+        height: 100%;
+        visibility: hidden;
+        pointer-events: auto;
+        box-sizing: border-box;
+    }
+
+    anim-dropdown-nav-content.is-active {
+        display: block;
+    }
+</style>

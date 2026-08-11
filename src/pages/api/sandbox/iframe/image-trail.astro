@@ -1,5 +1,6 @@
 ---
-import ImageTrail from "@/components/gsap/components/ImageTrail.astro";
+import { ImageTrail } from "@/components/sandbox/gsap/components";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
 
 const galleryImages = [
     "https://picsum.photos/id/1018/300/200",
@@ -10,13 +11,15 @@ const galleryImages = [
 ];
 ---
 
-<ImageTrail images={galleryImages} movementThreshold={35}>
-    <main class="showcase">
-        <div class="instructions">
-            <h2>Move your mouse around this box</h2>
-        </div>
-    </main>
-</ImageTrail>
+<PageLayout title="Sandbox" description="">
+    <ImageTrail images={galleryImages} movementThreshold={35}>
+        <main class="showcase">
+            <div class="instructions">
+                <h2>Move your mouse around this box</h2>
+            </div>
+        </main>
+    </ImageTrail>
+</PageLayout>
 
 <style>
     .showcase {

@@ -1,0 +1,89 @@
+---
+import { ImageSteppedSlider } from "@/components/sandbox/gsap/components";
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+
+const displayItems = [
+    {
+        type: "project",
+        slug: "lamer",
+        name: "La Mer",
+        img: "https://picsum.photos/id/1018/600/400",
+        alt: "",
+    },
+    {
+        type: "project",
+        slug: "perrier-jouet-i",
+        name: "Perrier Jouët I perrier-jouet-i",
+        img: "https://picsum.photos/id/1019/600/400",
+        alt: "",
+    },
+    {
+        type: "talent",
+        slug: "chelios",
+        name: "Chelios",
+        img: "https://picsum.photos/id/1020/600/400",
+        alt: "",
+    },
+    {
+        type: "talent",
+        slug: "alys-thomas",
+        name: "Alys Thomas",
+        img: "https://picsum.photos/id/1021/600/400",
+        alt: "",
+    },
+    {
+        type: "project",
+        slug: "uber",
+        name: "Uber",
+        img: "https://picsum.photos/id/1022/600/400",
+        alt: "Two plush Milano Cortina 2026 Olympic mascots buckled into an Uber car's back seat on a snowy night street",
+    },
+    {
+        type: "talent",
+        slug: "ulises",
+        name: "Ulises",
+        img: "https://picsum.photos/id/1023/600/400",
+        alt: "Aerial view of grid-patterned blue tennis court on a green hillside with a figure walking",
+    },
+    {
+        type: "talent",
+        slug: "leo-cannone",
+        name: "Leo Cannone",
+        img: "https://picsum.photos/id/1024/600/400",
+        alt: "Silhouette of a traditional longtail boat drifting on calm water at golden sunset",
+    },
+    {
+        type: "project",
+        slug: "perrier-jouet-ii",
+        name: "Perrier Jouët II",
+        img: "https://picsum.photos/id/1025/600/400",
+        alt: "Giant stained-glass anemone flower sculpture centered in an ornate glass conservatory, Perrier-Jouët Heritage campaign",
+    },
+];
+---
+
+<PageLayout title="Sandbox" description="">
+    <div class="home">
+        <div class="div-block">
+            <h1 class="h1-home">
+                Inspiraton:https://www.detroit.paris/ Brands.<br />
+                <sub>Stepped Image Slider</sub>
+            </h1>
+        </div>
+        <ImageSteppedSlider items={displayItems} />
+    </div>
+</PageLayout>
+
+<style>
+    .div-block {
+        z-index: 90;
+        -webkit-user-select: none;
+        user-select: none;
+        align-self: flex-start;
+        position: relative;
+    }
+
+    .home {
+        padding-top: 4rem;
+    }
+</style>

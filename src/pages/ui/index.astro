@@ -1,0 +1,268 @@
+---
+import { getCollection } from "astro:content";
+import { Icon } from "astro-icon/components";
+import PageLayout from "@/layouts/core/PageLayout.astro";
+import { filterContentForListing } from "@/utils/content";
+
+const components = filterContentForListing(
+    await getCollection("sandboxComponents"),
+).sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+---
+
+<PageLayout title="UI" description="Browse all UI components">
+    <header
+        class="mb-12 border-b border-primary/15 pb-8 pt-24"
+        data-nav-section-message="Articles"
+    >
+        <p
+            class="mb-2 font-mono text-xs uppercase tracking-[0.25em] text-primary/40 opacity-0 translate-y-8"
+            data-reveal
+        >
+            UI
+        </p>
+
+        <div class="flex items-end justify-between gap-6 mt-4">
+            <div>
+                <h1
+                    class="text-4xl font-medium tracking-tight md:text-5xl opacity-0 translate-y-8"
+                    data-reveal
+                >
+                    UI Components
+                </h1>
+
+                <p
+                    class="mt-2 max-w-xl text-primary/60 opacity-0 translate-y-8"
+                    data-reveal
+                >
+                    UI components built with Astro, GSAP, ThreeJs and Reactjs
+                </p>
+            </div>
+        </div>
+    </header>
+    <section class="mt-8">
+        <div class="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {
+                components.map((item) => {
+                    const { title, subtitle, tags, cover, preview, id, slug } =
+                        item.data;
+                    const linkHref = `/ui/${slug ?? id ?? slug}`;
+                    const videoSrc = preview?.video_src;
+
+                    const imageSrc = cover
+                        ? typeof cover === "string"
+                            ? cover
+                            : cover.src
+                        : typeof preview?.image_src === "string"
+                          ? preview.image_src
+                          : preview?.image_src?.src;
+
+                    return (
+                        <a
+                            href={linkHref}
+                            data-articles-link
+                            data-cover={imageSrc}
+                            class="group relative flex min-h-[220px] flex-col justify-between rounded-none border border-border bg-card p-4 transition-colors hover:border-primary/50 hover:bg-accent/40 opacity-0 translate-y-8"
+                            data-reveal
+                        >
+                            <div>
+                                {(videoSrc || imageSrc) && (
+                                    <div class="mb-4 aspect-video w-full overflow-hidden rounded-none border border-border bg-muted">
+                                        {videoSrc ? (
+                                            <video
+                                                src={videoSrc}
+                                                autoplay
+                                                loop
+                                                muted
+                                                playsinline
+                                                class="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <img
+                                                src={imageSrc}
+                                                alt={title}
+                                                class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                                            />
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            <div class="mt-auto flex flex-col justify-end pt-2">
+                                {tags && tags.length > 0 && (
+                                    <div class="mb-2 flex flex-wrap gap-1">
+                                        {tags.map((tag) => (
+                                            <span class="rounded-none border border-border bg-secondary/60 px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-secondary-foreground">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+
+                                <div class="flex items-start justify-between gap-2">
+                                    <h2 class="text-base font-medium tracking-tight text-card-foreground group-hover:text-primary">
+                                        {title}
+                                    </h2>
+                                    <Icon
+                                        name="heroicons:arrow-up-right-20-solid"
+                                        class="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-primary"
+                                    />
+                                </div>
+
+                                {subtitle && (
+                                    <p class="mt-1 text-xs text-muted-foreground line-clamp-2">
+                                        {subtitle}
+                                    </p>
+                                )}
+                            </div>
+                        </a>
+                    );
+                })
+            }
+        </div>
+    </section>
+</PageLayout>
+
+<script>
+    import { gsap } from "@/utils/gsap-init";
+    import { audio } from "@/utils/audio";
+
+    let ctx: gsap.Context | undefined;
+
+    function initArticlesListAnimation() {
+        ctx?.revert();
+
+        ctx = gsap.context(() => {
+            const onLinkHover = () => {
+                audio.play("hover");
+            };
+
+            const preview = document.querySelector<HTMLDivElement>(
+                "#article-cover-preview",
+            );
+            const previewImg = preview?.querySelector("img") ?? null;
+            const desktopQuery = window.matchMedia("(min-width: 48rem)");
+            const reducedMotionQuery = window.matchMedia(
+                "(prefers-reduced-motion: reduce)",
+            );
+
+            if (preview) {
+                gsap.set(preview, { yPercent: -50, scale: 0.95 });
+            }
+
+            const articlesLinks = document.querySelectorAll<HTMLElement>(
+                "[data-articles-link]",
+            );
+
+            const cleanupFns: Array<() => void> = [];
+
+            articlesLinks.forEach((link) => {
+                link.addEventListener("mouseenter", onLinkHover);
+                cleanupFns.push(() =>
+                    link.removeEventListener("mouseenter", onLinkHover),
+                );
+
+                const cover = link.dataset.cover;
+                if (!cover || !preview || !previewImg) return;
+
+                const onEnter = () => {
+                    if (!desktopQuery.matches) return;
+
+                    previewImg.src = cover;
+                    previewImg.alt = link.dataset.coverAlt ?? "";
+
+                    const rect = link.getBoundingClientRect();
+                    const top = gsap.utils.clamp(
+                        140,
+                        window.innerHeight - 140,
+                        rect.top + rect.height / 2,
+                    );
+                    const rotation = gsap.utils.random(-5, 5);
+
+                    gsap.killTweensOf(preview);
+                    gsap.set(preview, { top });
+                    gsap.to(preview, {
+                        opacity: 1,
+                        scale: 1,
+                        rotation,
+                        duration: 0.35,
+                        ease: "power2.out",
+                    });
+                };
+
+                const onLeave = () => {
+                    gsap.killTweensOf(preview);
+                    gsap.to(preview, {
+                        opacity: 0,
+                        scale: 0.95,
+                        duration: 0.2,
+                        ease: "power2.in",
+                    });
+                };
+
+                link.addEventListener("mouseenter", onEnter);
+                link.addEventListener("mouseleave", onLeave);
+                cleanupFns.push(() => {
+                    link.removeEventListener("mouseenter", onEnter);
+                    link.removeEventListener("mouseleave", onLeave);
+                });
+            });
+
+            const monthGroups =
+                document.querySelectorAll<HTMLElement>("[data-month-group]");
+
+            if (reducedMotionQuery.matches) {
+                gsap.set(
+                    "[data-reveal], [data-month-heading], [data-articles-link]",
+                    {
+                        opacity: 1,
+                        y: 0,
+                    },
+                );
+            } else {
+                gsap.timeline().to("[data-reveal]", {
+                    y: 0,
+                    opacity: 1,
+                    duration: 1,
+                    stagger: 0.1,
+                    ease: "power3.out",
+                });
+
+                monthGroups.forEach((group) => {
+                    const heading = group.querySelector("[data-month-heading]");
+                    const rows = group.querySelectorAll("[data-articles-link]");
+
+                    gsap.timeline({
+                        scrollTrigger: {
+                            trigger: group,
+                            start: "top 85%",
+                        },
+                    })
+                        .to(heading, {
+                            y: 0,
+                            opacity: 1,
+                            duration: 0.7,
+                            ease: "power3.out",
+                        })
+                        .to(
+                            rows,
+                            {
+                                y: 0,
+                                opacity: 1,
+                                duration: 0.6,
+                                stagger: 0.05,
+                                ease: "power2.out",
+                            },
+                            "-=0.5",
+                        );
+                });
+            }
+
+            return () => {
+                cleanupFns.forEach((fn) => fn());
+            };
+        });
+    }
+
+    document.addEventListener("astro:page-load", initArticlesListAnimation);
+    document.addEventListener("astro:before-swap", () => ctx?.revert());
+</script>
