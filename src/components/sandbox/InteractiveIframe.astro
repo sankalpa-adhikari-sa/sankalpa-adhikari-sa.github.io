@@ -1,0 +1,292 @@
+---
+import { Icon } from "astro-icon/components";
+
+interface Props {
+    src: string;
+    title?: string;
+    defaultView?: "mobile" | "desktop";
+}
+
+const { src, title = "Preview", defaultView = "desktop" } = Astro.props;
+
+let safeSrc = src;
+try {
+    const targetUrl = new URL(src, Astro.url);
+    if (
+        targetUrl.origin === Astro.url.origin &&
+        targetUrl.pathname === Astro.url.pathname
+    ) {
+        console.warn(
+            `[preview-widget] Blocked iframe: The src "${src}" matches the current page.`,
+        );
+        safeSrc = "about:blank";
+    }
+} catch (e) {
+    console.error(`[preview-widget] Invalid URL provided: ${src}`);
+    safeSrc = "about:blank";
+}
+---
+
+<preview-widget
+    class="group flex w-full flex-col gap-3 font-sans fullscreen:box-border fullscreen:h-screen fullscreen:w-screen fullscreen:flex-col fullscreen:overflow-hidden fullscreen:bg-background fullscreen:p-4"
+    data-view={defaultView}
+>
+    <div
+        class="flex flex-col bg-muted/30 p-3 group-[:fullscreen]:flex-1 min-h-0"
+    >
+        <div
+            class="relative flex flex-col items-center h-[85vh] w-full overflow-hidden bg-background group-[:fullscreen]:h-auto group-[:fullscreen]:flex-1 min-h-0"
+        >
+            <div
+                class="relative h-full w-full shrink-0 transition-[width] duration-300 ease-in-out group-data-[view=mobile]:w-[430px] min-h-0"
+            >
+                <iframe
+                    src={safeSrc}
+                    title={title}
+                    allow="scripts popups popups-to-escape-sandbox"
+                    class="absolute inset-0 h-full w-full border-none bg-background [scrollbar-color:hsl(var(--muted-foreground))_transparent] [scrollbar-width:none]"
+                >
+                </iframe>
+            </div>
+        </div>
+    </div>
+
+    <div
+        class="flex flex-wrap items-center justify-between gap-3 group-[:fullscreen]:shrink-0 group-[:fullscreen]:pb-2"
+    >
+        <div class="hidden lg:block">
+            <div class="relative">
+                <button
+                    type="button"
+                    class="inline-flex h-7 w-[120px] items-center justify-between gap-2 rounded-md border border-border bg-muted/30 px-2.5 text-xs text-foreground transition-colors hover:bg-muted/80 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    id="viewport-toggle"
+                    aria-label="Toggle Viewport"
+                >
+                    <span
+                        class="flex min-w-0 items-center gap-2 text-muted-foreground"
+                    >
+                        <Icon
+                            name="heroicons:device-phone-mobile"
+                            id="icon-mobile"
+                            width="14"
+                            height="14"
+                            class="shrink-0"
+                        />
+
+                        <Icon
+                            name="heroicons:computer-desktop"
+                            id="icon-desktop"
+                            style="display:none;"
+                            width="14"
+                            height="14"
+                            class="shrink-0"
+                        />
+
+                        <span
+                            class="truncate text-foreground"
+                            id="viewport-text">Mobile</span
+                        >
+                    </span>
+                    <Icon
+                        name="heroicons:chevron-down"
+                        width="14"
+                        height="14"
+                        class="shrink-0 text-muted-foreground"
+                    />
+                </button>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a
+                href={src}
+                id="open-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 text-xs font-medium text-muted-foreground no-underline transition-colors hover:border-foreground/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                title="Open in new tab (O)"
+            >
+                <Icon
+                    name="heroicons:arrow-top-right-on-square"
+                    width="16"
+                    height="16"
+                    class="shrink-0"
+                />
+                <span class="hidden lg:inline">Open</span>
+                <kbd
+                    class="hidden rounded-sm border border-border px-1 py-0.5 font-mono text-[9px] text-muted-foreground lg:inline-block"
+                    >O</kbd
+                >
+            </a>
+
+            <button
+                type="button"
+                id="replay-btn"
+                class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md bg-tertiary px-2.5 text-xs font-medium text-tertiary-foreground shadow-sm transition-colors hover:bg-tertiary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                title="Replay (R)"
+            >
+                <Icon
+                    name="heroicons:arrow-path"
+                    width="16"
+                    height="16"
+                    class="shrink-0"
+                />
+                <span class="hidden lg:inline">Replay</span>
+                <kbd
+                    class="hidden rounded-sm bg-white/20 px-1 py-0.5 font-mono text-[9px] text-tertiary-foreground lg:inline-block"
+                    >R</kbd
+                >
+            </button>
+
+            <button
+                type="button"
+                id="fullscreen-btn"
+                class="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-border bg-transparent px-2.5 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/40 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                title="Toggle Fullscreen (F)"
+            >
+                <!-- Enter Icon -->
+                <span
+                    class="flex items-center gap-1.5 group-[:fullscreen]:hidden"
+                >
+                    <Icon
+                        name="heroicons:arrows-pointing-out"
+                        width="16"
+                        height="16"
+                        class="shrink-0"
+                    />
+                    <span class="hidden lg:inline">Fullscreen</span>
+                </span>
+
+                <span
+                    class="hidden items-center gap-1.5 group-[:fullscreen]:flex"
+                >
+                    <Icon
+                        name="heroicons:arrows-pointing-in"
+                        width="16"
+                        height="16"
+                        class="shrink-0"
+                    />
+                    <span class="hidden lg:inline">Exit</span>
+                </span>
+
+                <kbd
+                    class="hidden rounded-sm border border-border px-1 py-0.5 font-mono text-[9px] text-muted-foreground lg:inline-block"
+                    >F</kbd
+                >
+            </button>
+        </div>
+    </div>
+</preview-widget>
+<script>
+    class PreviewWidget extends HTMLElement {
+        connectedCallback() {
+            const iframe = this.querySelector("iframe") as HTMLIFrameElement;
+
+            const viewportToggle = this.querySelector("#viewport-toggle");
+            const viewportText = this.querySelector("#viewport-text");
+
+            const iconMobile = this.querySelector(
+                "#icon-mobile",
+            ) as HTMLElement;
+            const iconDesktop = this.querySelector(
+                "#icon-desktop",
+            ) as HTMLElement;
+
+            const openBtn = this.querySelector("#open-btn") as HTMLElement;
+            const replayBtn = this.querySelector("#replay-btn");
+            const fullscreenBtn = this.querySelector("#fullscreen-btn");
+
+            const syncTheme = () => {
+                try {
+                    const isDark =
+                        document.documentElement.classList.contains("dark");
+
+                    const iframeDoc =
+                        iframe.contentDocument ||
+                        iframe.contentWindow?.document;
+
+                    if (iframeDoc) {
+                        if (isDark) {
+                            iframeDoc.documentElement.classList.add("dark");
+                            iframeDoc.documentElement.style.colorScheme =
+                                "dark";
+                        } else {
+                            iframeDoc.documentElement.classList.remove("dark");
+                            iframeDoc.documentElement.style.colorScheme =
+                                "light";
+                        }
+                    }
+                } catch (e) {}
+            };
+
+            iframe.addEventListener("load", syncTheme);
+
+            const themeObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.attributeName === "class") {
+                        syncTheme();
+                    }
+                });
+            });
+
+            themeObserver.observe(document.documentElement, {
+                attributes: true,
+            });
+
+            viewportToggle?.addEventListener("click", () => {
+                const currentView = this.getAttribute("data-view");
+
+                if (currentView === "mobile") {
+                    this.setAttribute("data-view", "desktop");
+                    if (viewportText) viewportText.textContent = "Desktop";
+                    iconMobile.style.display = "none";
+                    iconDesktop.style.display = "block";
+                } else {
+                    this.setAttribute("data-view", "mobile");
+                    if (viewportText) viewportText.textContent = "Mobile";
+                    iconMobile.style.display = "block";
+                    iconDesktop.style.display = "none";
+                }
+            });
+
+            replayBtn?.addEventListener("click", () => {
+                if (iframe) {
+                    iframe.src = iframe.src;
+                }
+            });
+
+            fullscreenBtn?.addEventListener("click", () => {
+                if (!document.fullscreenElement) {
+                    this.requestFullscreen().catch((err) => {
+                        console.error(
+                            `Error attempting to enable fullscreen: ${err.message}`,
+                        );
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            });
+
+            document.addEventListener("keydown", (e) => {
+                if (
+                    ["INPUT", "TEXTAREA"].includes(
+                        (e.target as HTMLElement).tagName,
+                    )
+                )
+                    return;
+
+                if (e.key.toLowerCase() === "r") {
+                    replayBtn?.dispatchEvent(new Event("click"));
+                }
+                if (e.key.toLowerCase() === "f") {
+                    fullscreenBtn?.dispatchEvent(new Event("click"));
+                }
+                if (e.key.toLowerCase() === "o") {
+                    openBtn?.click();
+                }
+            });
+        }
+    }
+
+    customElements.define("preview-widget", PreviewWidget);
+</script>
