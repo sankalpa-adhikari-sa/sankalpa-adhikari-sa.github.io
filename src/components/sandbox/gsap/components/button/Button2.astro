@@ -1,0 +1,133 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type Radius = "xs" | "sm" | "md" | "lg";
+type Theme = "auto" | "dark" | "light";
+type Props = HTMLAttributes<"a"> &
+    HTMLAttributes<"button"> & {
+        iconName?: string;
+        theme?: Theme;
+        border?: boolean;
+        borderRadius?: Radius;
+        href?: string;
+    };
+const { iconName, href, type = "button", target, ...rest } = Astro.props;
+const Tag = href ? "a" : "button";
+const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
+---
+
+<Tag
+    data-btn-fip
+    class="btn"
+    href={href}
+    target={target}
+    rel={rel}
+    type={Tag === "button" ? type : undefined}
+    {...rest}
+>
+    <span class="btn__label">
+        <span class="btn__label-text"><slot /></span>
+        <span aria-hidden="true" class="btn__label-text"><slot /></span>
+    </span>
+    {
+        iconName && (
+            <span class="btn__icon-wrapper" aria-hidden="true">
+                <span class="btn__icon-inner">
+                    <Icon class="btn__icon" name={iconName} />
+                </span>
+                <span class="btn__icon-inner">
+                    <Icon class="btn__icon" name={iconName} />
+                </span>
+            </span>
+        )
+    }
+</Tag>
+
+<style>
+    .btn {
+        cursor: pointer;
+        position: relative;
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--background);
+        color: var(--background);
+        text-decoration: none;
+        padding: 0;
+        line-height: 1;
+        -webkit-user-select: none;
+        user-select: none;
+        outline-style: none;
+        grid-column-gap: 0.225em;
+        grid-row-gap: 0.0625em;
+    }
+    .btn__label {
+        display: grid;
+        perspective: 10rem;
+        transform-style: preserve-3d;
+    }
+    .btn__label-text {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transform-origin: 50% 50% -2rem;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        border-radius: 2rem;
+        background-color: var(--foreground);
+        transform-style: preserve-3d;
+        grid-column-start: 1;
+        grid-row-start: 1;
+    }
+    .btn__icon-wrapper {
+        display: grid;
+        perspective: 10rem;
+        transform-style: preserve-3d;
+        flex-shrink: 0;
+    }
+    .btn__icon-inner {
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+        transform-origin: 50% 50% -2rem;
+        grid-column-start: 1;
+        grid-row-start: 1;
+        background-color: var(--foreground);
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+        padding-right: 0.75rem;
+        padding-left: 0.75rem;
+        grid-column-start: 1;
+        grid-row-start: 1;
+        border-radius: 0.4rem;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn__label-text:nth-child(2) {
+        transform: rotateX(-90deg);
+    }
+
+    .btn__icon-inner:nth-child(2) {
+        transform: rotateX(90deg);
+    }
+
+    .btn:hover .btn__label-text:nth-child(1) {
+        transform: rotateX(90deg);
+    }
+
+    .btn:hover .btn__label-text:nth-child(2) {
+        transform: rotateX(0deg);
+    }
+
+    .btn:hover .btn__icon-inner:nth-child(1) {
+        transform: rotateX(-90deg);
+    }
+
+    .btn:hover .btn__icon-inner:nth-child(2) {
+        transform: rotateX(0deg);
+    }
+</style>

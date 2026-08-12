@@ -1,4 +1,4 @@
-import AnimButton from "./AnimButton.astro";
+import AnimButton from "./button/AnimButton.astro";
 import Card from "./card.astro";
 import ImageSteppedSlider from "./ImageSteppedSlider.astro";
 import ImageTrail from "./ImageTrail.astro";

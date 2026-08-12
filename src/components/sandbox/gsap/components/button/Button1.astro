@@ -1,0 +1,140 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type Radius = "xs" | "sm" | "md" | "lg";
+type Theme = "auto" | "dark" | "light";
+type Props = HTMLAttributes<"a"> &
+    HTMLAttributes<"button"> & {
+        arcRadius?: string;
+        arcDisplacement?: string;
+        iconName?: string;
+        theme?: Theme;
+        border?: boolean;
+        borderRadius?: Radius;
+        href?: string;
+        hoverInOnly?: boolean;
+        direction?: "ltr" | "rtl";
+    };
+
+const {
+    iconName,
+    href,
+    type = "button",
+    target,
+    arcRadius = "38deg",
+    arcDisplacement = "2000%",
+    hoverInOnly = false,
+    direction = "rtl",
+    ...rest
+} = Astro.props;
+
+const Tag = href ? "a" : "button";
+const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
+
+// RTL: Incoming enters from Right and exits to Left
+// LTR: Incoming enters from Left and exits to Right
+const isRTL = direction === "rtl";
+const startAngle = isRTL ? arcRadius : `calc(-1 * ${arcRadius})`;
+const exitAngle = isRTL ? `calc(-1 * ${arcRadius})` : arcRadius;
+---
+
+<Tag
+    class="btn"
+    href={href}
+    target={target}
+    rel={rel}
+    type={Tag === "button" ? type : undefined}
+    data-hover-in-only={hoverInOnly}
+    {...rest}
+>
+    <span class="btn__label">
+        <span class="btn__label-text"><slot /></span>
+        <span aria-hidden="true" class="btn__label-text"><slot /></span>
+    </span>
+    {
+        iconName && (
+            <span class="btn__icon-wrapper" aria-hidden="true">
+                <span class="btn__icon-inner">
+                    <Icon class="btn__icon" name={iconName} />
+                </span>
+                <span class="btn__icon-inner">
+                    <Icon class="btn__icon" name={iconName} />
+                </span>
+            </span>
+        )
+    }
+</Tag>
+
+<style define:vars={{ y: arcDisplacement, startAngle, exitAngle }}>
+    .btn {
+        --duration: 0.5s;
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 2rem;
+        background-color: var(--foreground, #000);
+        color: var(--background, #fff);
+        text-decoration: none;
+        cursor: pointer;
+
+        overflow: hidden;
+    }
+
+    .btn__label,
+    .btn__icon-wrapper {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .btn__label-text,
+    .btn__icon-inner {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        white-space: nowrap;
+        transform-origin: 50% var(--y);
+        transition: transform var(--duration) var(--ease);
+    }
+
+    .btn__label-text:nth-of-type(1),
+    .btn__icon-inner:nth-of-type(1) {
+        transform: rotate(0deg);
+    }
+
+    .btn__label-text:nth-of-type(2),
+    .btn__icon-inner:nth-of-type(2) {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        transform: rotate(var(--startAngle));
+    }
+
+    .btn:hover .btn__label-text:nth-of-type(1),
+    .btn:hover .btn__icon-inner:nth-of-type(1) {
+        transform: rotate(var(--exitAngle));
+    }
+
+    .btn:hover .btn__label-text:nth-of-type(2),
+    .btn:hover .btn__icon-inner:nth-of-type(2) {
+        transform: rotate(0deg);
+    }
+
+    .btn[data-hover-in-only="true"] .btn__label-text,
+    .btn[data-hover-in-only="true"] .btn__icon-inner {
+        transition: none;
+    }
+
+    .btn[data-hover-in-only="true"]:hover .btn__label-text,
+    .btn[data-hover-in-only="true"]:hover .btn__icon-inner {
+        transition: transform var(--duration) var(--ease);
+    }
+</style>

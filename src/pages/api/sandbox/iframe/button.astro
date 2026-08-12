@@ -1,0 +1,31 @@
+---
+import Button1 from "@/components/sandbox/gsap/components/button/Button1.astro";
+import Button2 from "@/components/sandbox/gsap/components/button/Button2.astro";
+import WaveButton from "@/components/sandbox/gsap/components/button/WaveButton.astro";
+
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+---
+
+<PageLayout title="" description="">
+    <section class="btn-section">
+        <WaveButton> Hello </WaveButton>
+        <WaveButton waveColor="blueberry" disableTextAnim={true}>
+            Hello
+        </WaveButton>
+        <Button2 iconName="heroicons:arrow-small-right"> Hello </Button2>
+        <Button1 arcRadius="28deg" arcDisplacement="1000%" direction="rtl"
+            >Hello</Button1
+        >
+    </section>
+</PageLayout>
+
+<style>
+    .btn-section {
+        display: flex;
+        height: 100vh;
+        width: 100vw;
+        gap: 2rem;
+        justify-content: center;
+        align-items: center;
+    }
+</style>
