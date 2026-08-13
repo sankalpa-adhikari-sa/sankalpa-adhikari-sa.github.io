@@ -1,0 +1,165 @@
+---
+import Button1 from "@/components/sandbox/gsap/components/button/Button1.astro";
+import Button2 from "@/components/sandbox/gsap/components/button/Button2.astro";
+import Button3 from "@/components/sandbox/gsap/components/button/Button3.astro";
+import Button4 from "@/components/sandbox/gsap/components/button/Button4.astro";
+import Button5 from "@/components/sandbox/gsap/components/button/Button5.astro";
+
+import PageLayout from "@/layouts/sandbox/PageLayout.astro";
+---
+
+<PageLayout title="Button Components" description="Interactive button variants">
+  <div class="showcase-container">
+    <!-- Button 1 -->
+    <section class="btn-group">
+      <h2 class="group-title">Button 1</h2>
+      <div class="btn-wrapper">
+        <div class="btn-item">
+          <span class="item-label">Default Wave</span>
+          <Button1> Hello </Button1>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">Blueberry / Static Text</span>
+          <Button1 waveColor="blueberry" disableTextAnim={true}>
+            Hello
+          </Button1>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button 2 -->
+    <section class="btn-group">
+      <h2 class="group-title">Button 2</h2>
+      <div class="btn-wrapper">
+        <div class="btn-item">
+          <span class="item-label">Reverse 3D Flip</span>
+          <Button2 iconName="heroicons:arrow-small-right"> Hello </Button2>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button 3 -->
+    <section class="btn-group">
+      <h2 class="group-title">Button 3</h2>
+      <div class="btn-wrapper">
+        <div class="btn-item">
+          <span class="item-label">Direction: RTL</span>
+          <Button3 arcRadius="28deg" arcDisplacement="1500%" direction="rtl">
+            Hover Me
+          </Button3>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">Direction: LTR</span>
+          <Button3 arcRadius="28deg" arcDisplacement="1500%" direction="ltr">
+            Hover Me
+          </Button3>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">Hover In Only (LTR)</span>
+          <Button3
+            arcRadius="28deg"
+            arcDisplacement="1500%"
+            direction="ltr"
+            hoverInOnly
+          >
+            Hover Me
+          </Button3>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">Hover In Only (RTL)</span>
+          <Button3
+            arcRadius="28deg"
+            arcDisplacement="1500%"
+            direction="rtl"
+            hoverInOnly
+          >
+            Hover Me
+          </Button3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button 4 -->
+    <section class="btn-group">
+      <h2 class="group-title">Button 4</h2>
+      <div class="btn-wrapper">
+        <div class="btn-item">
+          <span class="item-label">Swipe Effect</span>
+          <Button4 borderRadius="none">Button Swipe</Button4>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">Swipe Effect (sm)</span>
+          <Button4 borderRadius="sm">Button Swipe</Button4>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">Swipe Effect (lg)</span>
+          <Button4 borderRadius="lg">Button Swipe</Button4>
+        </div>
+      </div>
+    </section>
+
+    <!-- Button 5 -->
+    <section class="btn-group">
+      <h2 class="group-title">Button 5</h2>
+      <div class="btn-wrapper">
+        <div class="btn-item">
+          <span class="item-label">3D Flip</span>
+          <Button5 borderRadius="none">Button Flip</Button5>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">3D Flip (sm)</span>
+          <Button5 borderRadius="sm">Button Flip</Button5>
+        </div>
+        <div class="btn-item">
+          <span class="item-label">3D Flip (Lg)</span>
+          <Button5 borderRadius="lg">Button Flip</Button5>
+        </div>
+      </div>
+    </section>
+  </div>
+</PageLayout>
+
+<style>
+  .showcase-container {
+    padding: 3rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2.5rem;
+  }
+
+  .btn-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    border-radius: 12px;
+  }
+
+  .group-title {
+    font-size: 1rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    opacity: 0.7;
+    margin: 0;
+  }
+
+  .btn-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 2rem;
+  }
+
+  .btn-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .item-label {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    opacity: 0.5;
+    letter-spacing: 0.03em;
+  }
+</style>

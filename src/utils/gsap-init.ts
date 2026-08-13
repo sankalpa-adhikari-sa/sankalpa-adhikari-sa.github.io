@@ -1,6 +1,7 @@
 import gsap from "gsap";
 import { CustomEase } from "gsap/CustomEase";
 import { GSDevTools } from "gsap/GSDevTools";
+import MotionPathPlugin from "gsap/MotionPathPlugin";
 import { Observer } from "gsap/Observer";
 import ScrambleTextPlugin from "gsap/ScrambleTextPlugin";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -13,6 +14,7 @@ gsap.registerPlugin(
 	Observer,
 	GSDevTools,
 	CustomEase,
+	MotionPathPlugin,
 );
 
 export {
@@ -23,4 +25,5 @@ export {
 	Observer,
 	GSDevTools,
 	CustomEase,
+	MotionPathPlugin,
 };

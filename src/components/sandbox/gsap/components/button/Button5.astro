@@ -1,0 +1,110 @@
+---
+import type { HTMLAttributes } from "astro/types";
+import { Icon } from "astro-icon/components";
+
+type BorderRadius = "none" | "xs" | "sm" | "md" | "lg";
+type Theme = "auto" | "dark" | "light";
+type Props = HTMLAttributes<"a"> &
+  HTMLAttributes<"button"> & {
+    iconName?: string;
+    theme?: Theme;
+    border?: boolean;
+    borderRadius?: BorderRadius;
+    href?: string;
+  };
+const {
+  iconName,
+  href,
+  type = "button",
+  target,
+  borderRadius = "lg",
+  ...rest
+} = Astro.props;
+const Tag = href ? "a" : "button";
+const rel = target === "_blank" ? "noopener noreferrer" : rest.rel;
+
+const radiusMap: Record<BorderRadius, string> = {
+  none: "0rem",
+  xs: "0.25rem",
+  sm: "0.5rem",
+  md: "1rem",
+  lg: "2rem",
+};
+
+const currentRadius = radiusMap[borderRadius] || radiusMap.md;
+---
+
+<Tag
+  data-btn-fip
+  class="btn"
+  href={href}
+  target={target}
+  rel={rel}
+  style={`--border-radius: ${currentRadius};`}
+  type={Tag === "button" ? type : undefined}
+  {...rest}
+>
+  <span class="btn__label">
+    <span class="btn__label-text"><slot /></span>
+    <span aria-hidden="true" class="btn__label-text"><slot /></span>
+  </span>
+  {
+    iconName && (
+      <span class="btn__icon-wrapper" aria-hidden="true">
+        <span class="btn__icon-inner">
+          <Icon class="btn__icon" name={iconName} />
+        </span>
+        <span class="btn__icon-inner">
+          <Icon class="btn__icon" name={iconName} />
+        </span>
+      </span>
+    )
+  }
+</Tag>
+<style define:vars={{ "border-radius": currentRadius }}>
+  .btn {
+    cursor: pointer;
+    display: inline-flex;
+    position: relative;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background-color: var(--foreground);
+    text-decoration: none;
+    outline-style: none;
+    padding: 0;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+  .btn__label {
+    display: grid;
+    perspective: 10rem;
+    transform-style: preserve-3d;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+  .btn__label-text {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform-origin: 50% 50% -1.5rem;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 0.75rem 1rem;
+    border-radius: var(--border-radius);
+    background-color: var(--orange);
+    color: white;
+    transform-style: preserve-3d;
+    grid-column-start: 1;
+    grid-row-start: 1;
+  }
+  .btn__label-text:nth-child(2) {
+    transform: rotateX(-90deg);
+  }
+  .btn:hover .btn__label-text:nth-child(1) {
+    transform: rotateX(90deg);
+  }
+  .btn:hover .btn__label-text:nth-child(2) {
+    transform: rotateX(0deg);
+  }
+</style>
