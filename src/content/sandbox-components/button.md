@@ -1,6 +1,6 @@
 ---
 id: "button"
-title: "Button"
+title: "Button Packs"
 slug: "button"
 pubDate: 2026-08-11T02:15:00+05:45
 draft: false
